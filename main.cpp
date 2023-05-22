@@ -59,7 +59,7 @@ vector<int> tspApproximation(vector<pll>& points) {
 }
 
 void solve() {
-    freopen("data.in", "r", stdin);
+    // freopen("data/data.in", "r", stdin);
 
     int n, k;
     cin >> n >> k;
@@ -76,41 +76,29 @@ void solve() {
     const int MAX_COORD = 814000;
     const int SQRT_K = 11;
 
-    set<int> test;
-    int checksum = 0;
-    
     int d = (MAX_COORD + SQRT_K) / SQRT_K;
+    int dy = (MAX_COORD + SQRT_K + 1) / (SQRT_K + 1);
     for (int i=0; i<SQRT_K; ++i) {
-        for (int j=0; j<SQRT_K; ++j) {
+        for (int j=0; j<SQRT_K+1; ++j) {
             vector<pll> local_points;
             vector<int> ori_idx;
-            for (int l=(k - SQRT_K * SQRT_K); l<n; ++l) {
+            for (int l=(k - SQRT_K * SQRT_K - SQRT_K); l<n; ++l) {
                 auto[p, idx] = points[l];
                 auto[x, y] = p;
-                if (d * i <= x && x < d * (i+1) && d * j <= y && y < d * (j+1)) {
+                if (d * i <= x && x < d * (i+1) && dy * j <= y && y < dy * (j+1)) {
                     local_points.push_back(p);
                     ori_idx.push_back(idx);
                 }
             }
+            
             vector<int> tour = tspApproximation(local_points);
-            cout << local_points.size() << ' ';
-            checksum += local_points.size();
-            for (int idx: tour) {
-                cout << ori_idx[idx] << ' ';
-                if (test.find(ori_idx[idx]) != test.end()) {
-                    // print(i, j);
-                    assert(false);
-                }
-                test.insert(ori_idx[idx]);
-            }
+            cout << tour.size() << ' ';
+            for (int idx: tour) cout << ori_idx[idx] << ' ';
             cout << '\n';
         }
     }
-    assert(checksum == 7981);
 
-    for (int i=0; i<k-SQRT_K*SQRT_K; ++i) {
-        cout << "1 " << i+1 << '\n';
-    }
+    for (int i=0; i<k-SQRT_K*SQRT_K-SQRT_K; ++i) cout << "1 " << i+1 << '\n';
 }
 
 int main() {
