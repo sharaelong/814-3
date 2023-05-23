@@ -45,7 +45,7 @@ void solve(int idx) {
         }
         score = max(score, tmp);
     }
-    cout << score << ' ';
+    cout << fixed << setprecision(2) << score << '\n';
 }
 
 int main(int argc, char **argv) {

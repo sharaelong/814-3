@@ -19,12 +19,3 @@ I applied new technique to find more improved TSP, no change to clustering. Chat
 Score: 34219073.69  
 Time: 1120ms  
 I used k-means for clustering (which also given by ChatGPT), but it shows worse results than naive 10x14 grid. Max iteration was 100, and clustering takes time about 550ms purely. I don't have any intuition about how k-means groups points in random distribution...  
-
-
-* Utilities for development
-
-1. My own dataset and scoring
-```console
-for i in {1..50}; do cat "data/data$i.in" | ./main | ./score "$i" || break; done
-pbpaste | tr ' ' '+' | sed 's/$/\n/' | bc
-```
