@@ -8,58 +8,89 @@ typedef pair<int, int> pii;
 typedef pair<ll, ll> pll;
 
 // Function to calculate the Euclidean distance between two points
-ll calculateDistance(pll p1, pll p2) {
+double distance(const pll& p1, const pll& p2) {
     ll dx = p1.first - p2.first;
     ll dy = p1.second - p2.second;
-    return dx * dx + dy * dy;
+    return sqrt(dx * dx + dy * dy);
 }
 
-// Function to find the nearest neighbor of a given point
-int findNearestNeighbor(int current, vector<pll>& points, vector<bool>& visited) {
-    int nearestNeighbor = -1;
-    ll minDistance = numeric_limits<ll>::max();
+// Function to calculate the total tour length
+double tourLength(const vector<pll>& points, const vector<int>& tour) {
+    double totalLength = 0.0;
+    int n = tour.size();
+    for (int i = 0; i < n; ++i) {
+        int j = (i + 1) % n;
+        totalLength += distance(points[tour[i]], points[tour[j]]);
+    }
+    return totalLength;
+}
 
-    for (int i = 0; i < points.size(); i++) {
-        if (!visited[i] && i != current) {
-            ll distance = calculateDistance(points[current], points[i]);
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearestNeighbor = i;
+// Function to perform the Chained Lin-Kernighan algorithm
+vector<int> chainedLinKernighan(const vector<pll>& points, const chrono::milliseconds& timeLimit) {
+    int n = points.size();
+
+    // Initialize the tour to a simple sequential order
+    vector<int> tour(n);
+    for (int i = 0; i < n; ++i) {
+        tour[i] = i;
+    }
+
+    double bestLength = numeric_limits<double>::max();
+    vector<int> bestTour;
+
+    // Calculate the initial tour length
+    double currentLength = tourLength(points, tour);
+
+    // Get the current time
+    auto startTime = chrono::high_resolution_clock::now();
+
+    // Main loop of the algorithm
+    while (true) {
+        bool improvement = false;
+
+        // Try all possible 2-opt exchanges
+        for (int i = 0; i < n - 2; ++i) {
+            for (int j = i + 2; j < n; ++j) {
+                // Calculate the change in tour length
+                double delta = 0.0;
+                delta += distance(points[tour[i]], points[tour[j]]);
+                delta += distance(points[tour[i + 1]], points[tour[(j + 1) % n]]);
+                delta -= distance(points[tour[i]], points[tour[i + 1]]);
+                delta -= distance(points[tour[j]], points[tour[(j + 1) % n]]);
+
+                // Update the tour length
+                double newLength = currentLength + delta;
+
+                // Update the tour if the new length is better
+                if (newLength < bestLength) {
+                    bestLength = newLength;
+                    // Reverse the order of the tour segment between i and j
+                    vector<int> newTour = tour;
+                    reverse(newTour.begin() + i + 1, newTour.begin() + j + 1);
+                    bestTour = newTour;
+                    improvement = true;
+                }
             }
         }
+
+        // Break the loop if no improvement is made or time limit is exceeded
+        auto currentTime = chrono::high_resolution_clock::now();
+        auto elapsedTime = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime);
+        if (!improvement || elapsedTime > timeLimit) {
+            break;
+        }
+
+        tour = bestTour;
+        currentLength = bestLength;
     }
 
-    return nearestNeighbor;
-}
-
-// Function to implement the 2-approximation algorithm for TSP
-vector<int> tspApproximation(vector<pll>& points) {
-    int n = points.size();
-    vector<bool> visited(n, false);
-
-    // Start at the first point
-    int current = 0;
-    visited[current] = true;
-
-    // Store the order of visited points
-    vector<int> tour;
-    tour.push_back(current);
-
-    // Find nearest neighbors and visit them in order
-    for (int i = 0; i < n - 1; i++) {
-        int nearestNeighbor = findNearestNeighbor(current, points, visited);
-        visited[nearestNeighbor] = true;
-        tour.push_back(nearestNeighbor);
-        current = nearestNeighbor;
-    }
-
-    // Add the distance from the last point back to the starting point
-    // tour.push_back(0);
-    return tour;
+    return bestTour;
 }
 
 void solve() {
-    // freopen("data/data.in", "r", stdin);
+#ifdef SHARAELONG
+    freopen("data/data.in", "r", stdin);
+#endif
 
     int n, k;
     cin >> n >> k;
@@ -74,31 +105,34 @@ void solve() {
     }
 
     const int MAX_COORD = 814000;
-    const int SQRT_K = 11;
 
-    int d = (MAX_COORD + SQRT_K) / SQRT_K;
-    int dy = (MAX_COORD + SQRT_K + 1) / (SQRT_K + 1);
-    for (int i=0; i<SQRT_K; ++i) {
-        for (int j=0; j<SQRT_K+1; ++j) {
+    set<int> s;
+    
+    int dx = (MAX_COORD + 10) / 10;
+    int dy = (MAX_COORD + 14) / 14;
+    for (int i=0; i<10; ++i) {
+        for (int j=0; j<14; ++j) {
             vector<pll> local_points;
             vector<int> ori_idx;
-            for (int l=(k - SQRT_K * SQRT_K - SQRT_K); l<n; ++l) {
+            for (int l=0; l<n; ++l) {
                 auto[p, idx] = points[l];
                 auto[x, y] = p;
-                if (d * i <= x && x < d * (i+1) && dy * j <= y && y < dy * (j+1)) {
+                if (dx * i <= x && x < dx * (i+1) && dy * j <= y && y < dy * (j+1)) {
                     local_points.push_back(p);
                     ori_idx.push_back(idx);
                 }
             }
-            
-            vector<int> tour = tspApproximation(local_points);
+
+            // Set the time limit to 32 milliseconds
+            chrono::milliseconds timeLimit(32);
+
+            // Run the Chained Lin-Kernighan algorithm
+            vector<int> tour = chainedLinKernighan(local_points, timeLimit);
             cout << tour.size() << ' ';
             for (int idx: tour) cout << ori_idx[idx] << ' ';
             cout << '\n';
         }
     }
-
-    for (int i=0; i<k-SQRT_K*SQRT_K-SQRT_K; ++i) cout << "1 " << i+1 << '\n';
 }
 
 int main() {

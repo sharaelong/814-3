@@ -1,9 +1,15 @@
 1. 2-approximation and square grid
-It is well-known so chatgpt do it well. Also I assigned first 19 cities to extra salesmen, and divide whole grid 11x11 square and assign each square to each saleman.
-Score: 36515513.01
-Time: 12ms, relatively fast.
+Score: 36515513.01  
+Time: 12ms, relatively fast.  
+It is well-known so chatgpt do it well. Also I assigned first 19 cities to extra salesmen, and divide whole grid 11x11 square and assign each square to each saleman.  
 
-2. improve square grid to use 11x12 grid.
-It uses 8 more salesmen in dividing cluster.
-Score: 33832782.12
-Time: 12ms, same as before
+2. Improve square grid to use 10x14 grid.
+Score: 32342713.38  
+Time: 12ms, same as before  
+It uses every salesmen in tour.  
+
+3. Chained Lin-Kernighan heuristic
+Score: 26611309.87  
+Time: 552ms  
+I applied new technique to find more improved TSP, no change to clustering. ChatGPT gives a (is it real correct code?) code about it. Also I made 32ms time limit for each salesman instance so it will not exceed time limit. However real time is 552ms which means every subproblem was solved under 32ms.  
+
