@@ -8,7 +8,7 @@ typedef pair<int, int> pii;
 
 int main() {
     // freopen("test.in", "r", stdin);
-    freopen("data.in", "w", stdout);
+    // freopen("data.in", "w", stdout);
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
 
