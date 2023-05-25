@@ -24,8 +24,11 @@ int main() {
         s.insert({ x, y });
     }
 
+    vector<pair<ll, ll>> vec(s.begin(), s.end());
+    shuffle(vec.begin(), vec.end(), gen);
+
     cout << "8000 140\n";
-    for (auto[x, y]: s) {
+    for (auto[x, y]: vec) {
         cout << x << ' ' << y << '\n';
     }
 }

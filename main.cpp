@@ -74,75 +74,70 @@ vector<int> threeOpt(const vector<pll>& points, const chrono::milliseconds& time
                     c1 += distance(a, c);
                     c1 += distance(b, d);
                     c1 += distance(e, f);
-                    if (c1 < originalLength) {
-                        improvement = true;
-                        reverse(tour.begin() + i + 1, tour.begin() + j + 1);
-                        continue;
-                    }
+                    
 
                     double c2 = 0.0; // AB'C
                     c2 += distance(a, b);
                     c2 += distance(c, e);
                     c2 += distance(d, f);
-                    if (c2 < originalLength) {
-                        improvement = true;
-                        reverse(tour.begin() + j + 1, tour.begin() + k + 1);
-                        continue;
-                    }
+                    
 
                     double c3 = 0.0; // ABC'
                     c3 += distance(a, e);
                     c3 += distance(b, f);
                     c3 += distance(c, d);
-                    if (c3 < originalLength) {
-                        improvement = true;
-                        reverse(tour.begin() + i + 1, tour.begin() + k + 1); // change body, not segment. It is symmetric.
-                        continue;
-                    }
+                    
 
                     double c4 = 0.0; // A'B'C
                     c4 += distance(a, c);
                     c4 += distance(b, e);
                     c4 += distance(d, f);
-                    if (c4 < originalLength) {
-                        improvement = true;
-                        reverse(tour.begin() + i + 1, tour.begin() + j + 1);
-                        reverse(tour.begin() + j + 1, tour.begin() + k + 1);
-                        continue;
-                    }
+                    
 
                     double c5 = 0.0; // A'BC'
                     c5 += distance(a, e);
                     c5 += distance(b, d);
                     c5 += distance(c, f);
-                    if (c5 < originalLength) {
-                        improvement = true;
-                        reverse(tour.begin() + i + 1, tour.begin() + j + 1);
-                        reverse(tour.begin() + i + 1, tour.begin() + k + 1);
-                        continue;
-                    }
 
                     double c6 = 0.0; // AB'C'
                     c6 += distance(a, d);
                     c6 += distance(b, f);
                     c6 += distance(c, e);
-                    if (c6 < originalLength) {
-                        improvement = true;
-                        reverse(tour.begin() + j + 1, tour.begin() + k + 1);
-                        reverse(tour.begin() + i + 1, tour.begin() + k + 1);
-                        continue;
-                    }
 
                     double c7 = 0.0; // A'B'C'
                     c7 += distance(a, d);
                     c7 += distance(b, e);
                     c7 += distance(c, f);
-                    if (c7 < originalLength) {
+
+                    double mn = min({ c1, c2, c3, c4, c5, c6, c7 });
+                    if (mn < originalLength) {
                         improvement = true;
-                        reverse(tour.begin() + i + 1, tour.begin() + j + 1);
-                        reverse(tour.begin() + j + 1, tour.begin() + k + 1);
-                        reverse(tour.begin() + i + 1, tour.begin() + k + 1);
-                        continue;
+                        if (c1 == mn) {
+                            reverse(tour.begin() + i + 1, tour.begin() + j + 1);
+                        }
+                        if (c2 == mn) {
+                            reverse(tour.begin() + j + 1, tour.begin() + k + 1);
+                        }
+                        if (c3 == mn) {
+                            reverse(tour.begin() + i + 1, tour.begin() + k + 1); // change body, not segment. It is symmetric.
+                        }
+                        if (c4 == mn) {
+                            reverse(tour.begin() + i + 1, tour.begin() + j + 1);
+                            reverse(tour.begin() + j + 1, tour.begin() + k + 1);
+                        }
+                        if (c5 == mn) {
+                            reverse(tour.begin() + i + 1, tour.begin() + j + 1);
+                            reverse(tour.begin() + i + 1, tour.begin() + k + 1);
+                        }
+                        if (c6 == mn) {
+                            reverse(tour.begin() + j + 1, tour.begin() + k + 1);
+                            reverse(tour.begin() + i + 1, tour.begin() + k + 1);
+                        }
+                        if (c7 == mn) {
+                            reverse(tour.begin() + i + 1, tour.begin() + j + 1);
+                            reverse(tour.begin() + j + 1, tour.begin() + k + 1);
+                            reverse(tour.begin() + i + 1, tour.begin() + k + 1);
+                        }
                     }
                 }
             }
@@ -161,7 +156,7 @@ vector<int> threeOpt(const vector<pll>& points, const chrono::milliseconds& time
 
 void solve() {
 #ifdef SHARAELONG
-    freopen("data/data.in", "r", stdin);
+    // freopen("data/data.in", "r", stdin);
 #endif
 
     int n, k;
