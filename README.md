@@ -24,3 +24,11 @@ I used k-means for clustering (which also given by ChatGPT), but it shows worse 
 Score: 26519866.54  
 Time: 760ms  
 I called 2-opt function multiple time with random initial tour. But solution quality is not improved at much.  
+
+
+* Useful resources
+- [Traveling salesman problem (wikipedia)](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
+- [TSP Basics](http://tsp-basics.blogspot.com)
+- [The Traveling Salesman Problem: A Computational Study, David L. Applegate, Robert E. Bixby, Vasek Chvátal & William J. Cook](https://www.math.uwaterloo.ca/tsp/book/index.html)
+- [Aarts E., Lenstra J.K. Local Search in combinatorial optimization](https://www.amazon.com/Local-Search-Combinatorial-Optimization-Emile/dp/0691115222)
+- [Combining 2-opt, 3-opt and 4-opt with k-swap-kick perturbations for the traveling salesman problem](https://isd.ktu.lt/it2011/material/Proceedings/1_AI_5.pdf)
