@@ -25,6 +25,10 @@ Score: 26519866.54
 Time: 760ms  
 I called 2-opt function multiple time with random initial tour. But solution quality is not improved at much.  
 
+6. 3-opt heuristic  
+Score: 25846617.68  
+Time: 1408ms  
+I used 3-opt heuristic instead of multiple 2-opt heuristic. It showed 2.6% performance gain, which is similar as other resource's experiment results. However, I can see execution time is increased sharply.  
 
 * Useful resources
 - [Traveling salesman problem (wikipedia)](https://en.wikipedia.org/wiki/Travelling_salesman_problem)

@@ -25,73 +25,138 @@ double tourLength(const vector<pll>& points, const vector<int>& tour) {
     return totalLength;
 }
 
-// Function to perform the 2-opt algorithm
-vector<int> twoopt(const vector<pll>& points, const chrono::milliseconds& timeLimit) {
+// Function to perform the 3-opt algorithm
+vector<int> threeOpt(const vector<pll>& points, const chrono::milliseconds& timeLimit) {
     int n = points.size();
 
-    double bestLength = numeric_limits<double>::max();
-    vector<int> bestTour;
+    // vector<int> bestTour;
 
-    for (int it=0; it<9; ++it) {
-        // Initialize the tour to a simple sequential order
-        vector<int> tour(n);
-        for (int i = 0; i < n; ++i) {
-            tour[i] = i;
-        }
+    // Initialize the tour to a simple sequential order
+    vector<int> tour(n);
+    for (int i = 0; i < n; ++i) {
+        tour[i] = i;
+    }
         
-        // Shuffle the vector randomly
-        random_device rd;
-        mt19937 g(rd());
-        shuffle(tour.begin(), tour.end(), g);
+    // Shuffle the vector randomly
+    // random_device rd;
+    // mt19937 g(rd());
+    // shuffle(tour.begin(), tour.end(), g);
 
-        // Calculate the initial tour length
-        double currentLength = tourLength(points, tour);
+    // Calculate the initial tour length
+    // double currentLength = tourLength(points, tour);
+    // double bestLength = currentLength;
 
-        // Get the current time
-        auto startTime = chrono::high_resolution_clock::now();
+    // Get the current time
+    auto startTime = chrono::high_resolution_clock::now();
 
-        // Main loop of the algorithm
-        while (true) {
-            bool improvement = false;
+    // Main loop of the algorithm
+    while (true) {
+        bool improvement = false;
 
-            // Try all possible 2-opt exchanges
-            for (int i = 0; i < n - 2; ++i) {
-                for (int j = i + 2; j < n; ++j) {
+        // Try all possible 3-opt exchanges
+        for (int i = 0; i < n - 2; ++i) {
+            for (int j = i + 2; j < n - 1; ++j) {
+                for (int k = j + 2; k < n - 1 + (i > 0); ++k) {
+                    const auto& a = points[tour[i]];
+                    const auto& b = points[tour[i+1]];
+                    const auto& c = points[tour[j]];
+                    const auto& d = points[tour[j+1]];
+                    const auto& e = points[tour[k]];
+                    const auto& f = points[tour[(k+1) % n]];
+                    
                     // Calculate the change in tour length
-                    double delta = 0.0;
-                    delta += distance(points[tour[i]], points[tour[j]]);
-                    delta += distance(points[tour[i + 1]], points[tour[(j + 1) % n]]);
-                    delta -= distance(points[tour[i]], points[tour[i + 1]]);
-                    delta -= distance(points[tour[j]], points[tour[(j + 1) % n]]);
+                    double originalLength = 0.0;
+                    originalLength += distance(a, b);
+                    originalLength += distance(c, d);
+                    originalLength += distance(e, f);
 
-                    // Update the tour length
-                    double newLength = currentLength + delta;
-
-                    // Update the tour if the new length is better
-                    if (newLength < bestLength) {
-                        bestLength = newLength;
-                        // Reverse the order of the tour segment between i and j
-                        vector<int> newTour = tour;
-                        reverse(newTour.begin() + i + 1, newTour.begin() + j + 1);
-                        bestTour = newTour;
+                    double c1 = 0.0; // A'BC
+                    c1 += distance(a, c);
+                    c1 += distance(b, d);
+                    c1 += distance(e, f);
+                    if (c1 < originalLength) {
                         improvement = true;
+                        reverse(tour.begin() + i + 1, tour.begin() + j + 1);
+                        continue;
+                    }
+
+                    double c2 = 0.0; // AB'C
+                    c2 += distance(a, b);
+                    c2 += distance(c, e);
+                    c2 += distance(d, f);
+                    if (c2 < originalLength) {
+                        improvement = true;
+                        reverse(tour.begin() + j + 1, tour.begin() + k + 1);
+                        continue;
+                    }
+
+                    double c3 = 0.0; // ABC'
+                    c3 += distance(a, e);
+                    c3 += distance(b, f);
+                    c3 += distance(c, d);
+                    if (c3 < originalLength) {
+                        improvement = true;
+                        reverse(tour.begin() + i + 1, tour.begin() + k + 1); // change body, not segment. It is symmetric.
+                        continue;
+                    }
+
+                    double c4 = 0.0; // A'B'C
+                    c4 += distance(a, c);
+                    c4 += distance(b, e);
+                    c4 += distance(d, f);
+                    if (c4 < originalLength) {
+                        improvement = true;
+                        reverse(tour.begin() + i + 1, tour.begin() + j + 1);
+                        reverse(tour.begin() + j + 1, tour.begin() + k + 1);
+                        continue;
+                    }
+
+                    double c5 = 0.0; // A'BC'
+                    c5 += distance(a, e);
+                    c5 += distance(b, d);
+                    c5 += distance(c, f);
+                    if (c5 < originalLength) {
+                        improvement = true;
+                        reverse(tour.begin() + i + 1, tour.begin() + j + 1);
+                        reverse(tour.begin() + i + 1, tour.begin() + k + 1);
+                        continue;
+                    }
+
+                    double c6 = 0.0; // AB'C'
+                    c6 += distance(a, d);
+                    c6 += distance(b, f);
+                    c6 += distance(c, e);
+                    if (c6 < originalLength) {
+                        improvement = true;
+                        reverse(tour.begin() + j + 1, tour.begin() + k + 1);
+                        reverse(tour.begin() + i + 1, tour.begin() + k + 1);
+                        continue;
+                    }
+
+                    double c7 = 0.0; // A'B'C'
+                    c7 += distance(a, d);
+                    c7 += distance(b, e);
+                    c7 += distance(c, f);
+                    if (c7 < originalLength) {
+                        improvement = true;
+                        reverse(tour.begin() + i + 1, tour.begin() + j + 1);
+                        reverse(tour.begin() + j + 1, tour.begin() + k + 1);
+                        reverse(tour.begin() + i + 1, tour.begin() + k + 1);
+                        continue;
                     }
                 }
             }
+        }
 
-            // Break the loop if no improvement is made or time limit is exceeded
-            auto currentTime = chrono::high_resolution_clock::now();
-            auto elapsedTime = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime);
-            if (!improvement || elapsedTime > timeLimit) {
-                break;
-            }
-
-            tour = bestTour;
-            currentLength = bestLength;
+        // Break the loop if no improvement is made or time limit is exceeded
+        auto currentTime = chrono::high_resolution_clock::now();
+        auto elapsedTime = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime);
+        if (!improvement || elapsedTime > timeLimit) {
+            break;
         }
     }
 
-    return bestTour;
+    return tour;
 }
 
 void solve() {
@@ -133,8 +198,8 @@ void solve() {
             // Set the time limit to 32 milliseconds
             chrono::milliseconds timeLimit(32);
 
-            // Run the Chained 2-opt algorithm
-            vector<int> tour = twoopt(local_points, timeLimit);
+            // Run the 3-opt algorithm
+            vector<int> tour = threeOpt(local_points, timeLimit);
             cout << tour.size() << ' ';
             for (int idx: tour) cout << ori_idx[idx] << ' ';
             cout << '\n';
