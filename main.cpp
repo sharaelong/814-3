@@ -14,17 +14,6 @@ double distance(const pll& p1, const pll& p2) {
     return sqrt(dx * dx + dy * dy);
 }
 
-// Function to calculate the total tour length
-double tourLength(const vector<pll>& points, const vector<int>& tour) {
-    double totalLength = 0.0;
-    int n = tour.size();
-    for (int i = 0; i < n; ++i) {
-        int j = (i + 1) % n;
-        totalLength += distance(points[tour[i]], points[tour[j]]);
-    }
-    return totalLength;
-}
-
 // Function to perform the 3-opt algorithm
 vector<int> threeOpt(const vector<pll>& points, const chrono::milliseconds& timeLimit) {
     int n = points.size();
@@ -154,9 +143,91 @@ vector<int> threeOpt(const vector<pll>& points, const chrono::milliseconds& time
     return tour;
 }
 
+double weightOfCluster(const vector<pair<pll, double>>& points) {
+    double ret = 0;
+    // for (auto[p, _]: points) {
+    //     ret += p.second;
+    // }
+    ret = 1;
+    ret *= sqrt(points.size());
+    return ret;
+}
+
+// Function to calculate the dot product between two vectors
+ll dotProduct(const pll& p1, const pll& p2) {
+    return p1.first * p2.first + p1.second * p2.second;
+}
+
+// Function to calculate the center of mass of a group of points
+pll calculateCenterOfMass(vector<pair<pll, double>>& points) {
+    ll sumX = 0, sumY = 0;
+    for (const auto& p : points) {
+        sumX += p.first.first;
+        sumY += p.first.second;
+    }
+    ll centerX = sumX / points.size();
+    ll centerY = sumY / points.size();
+    return {centerX, centerY};
+}
+
+// Function to find the point in group A mostly oriented in a given direction
+int findPointInGroupA(const vector<pair<pll, double>>& groupA, const pll& direction) {
+    int bestPointIdx = 0;
+    ll maxDotProduct = dotProduct(groupA[0].first, direction);
+    for (int i=0; i<groupA.size(); ++i) {
+        const auto& p = groupA[i].first;
+        ll currentDotProduct = dotProduct(p, direction);
+        if (currentDotProduct > maxDotProduct) {
+            maxDotProduct = currentDotProduct;
+            bestPointIdx = i;
+        }
+    }
+    return bestPointIdx;
+}
+
+void clustering(vector<vector<pair<pll, double>>>& groups, const vector<vector<int>>& adj) {
+    int k = groups.size();
+    for (int it=0; it<500; ++it) {
+        vector<double> weights(k);
+        for (int i=0; i<k; ++i) {
+            weights[i] = weightOfCluster(groups[i]);
+            weights[i] *= weights[i];
+        }
+        // print(weights);
+
+        // Create a discrete distribution based on the weights
+        discrete_distribution<int> distribution(weights.begin(), weights.end());
+
+        // Create a random number generator
+        random_device rd;
+        mt19937 gen(rd());
+
+        // Sample an index randomly based on the weights
+        int target = distribution(gen);
+
+        int min_target = -1;
+        double min_weight = numeric_limits<double>::max();
+        for (int neigh: adj[target]) {
+            double weight = weightOfCluster(groups[neigh]);
+            if (min_weight > weight) {
+                min_weight = weight;
+                min_target = neigh;
+            }
+        }
+
+        pll COMfrom = calculateCenterOfMass(groups[target]);
+        pll COMto = calculateCenterOfMass(groups[min_target]);
+        pll v = { COMto.first - COMfrom.first, COMto.second - COMto.second };
+        int bestPointIdx = findPointInGroupA(groups[target], v);
+        auto cpy = groups[target][bestPointIdx];
+        groups[target].erase(groups[target].begin() + bestPointIdx);
+        groups[min_target].push_back(cpy);
+    }
+}
+
 void solve() {
 #ifdef SHARAELONG
-    // freopen("data/data.in", "r", stdin);
+    freopen("data/data1.in", "r", stdin);
 #endif
 
     int n, k;
@@ -164,41 +235,66 @@ void solve() {
     n = 8000;
     k = 140;
     
-    vector<pair<pll, int>> points(n);
+    vector<pll> points(n);
+    map<pll, int> point_idx;
     for (int i=0; i<n; ++i) {
         int x, y;
         cin >> x >> y;
-        points[i] = { { x, y }, i+1 };
+        points[i] = { x, y };
+        point_idx[points[i]] = i+1;
     }
 
     const int MAX_COORD = 814000;
-
-    set<int> s;
-    
     int dx = (MAX_COORD + 10) / 10;
     int dy = (MAX_COORD + 14) / 14;
+
+    vector<vector<int>> adj(k);
     for (int i=0; i<10; ++i) {
         for (int j=0; j<14; ++j) {
-            vector<pll> local_points;
-            vector<int> ori_idx;
+            int num = 14*i + j;
+            if (i < 10 - 1) {
+                adj[num].push_back(num + 14);
+                adj[num + 14].push_back(num);
+            }
+            if (j < 14 - 1) {
+                adj[num].push_back(num + 1);
+                adj[num + 1].push_back(num);
+            }
+        }
+    }
+    
+    vector<vector<pair<pll, double>>> groups;
+    for (int i=0; i<10; ++i) {
+        for (int j=0; j<14; ++j) {
+            vector<pair<pll, double>> local_points;
             for (int l=0; l<n; ++l) {
-                auto[p, idx] = points[l];
-                auto[x, y] = p;
+                auto[x, y] = points[l];
                 if (dx * i <= x && x < dx * (i+1) && dy * j <= y && y < dy * (j+1)) {
-                    local_points.push_back(p);
-                    ori_idx.push_back(idx);
+                    local_points.push_back({ points[l], 1.0 });
                 }
             }
-
-            // Set the time limit to 32 milliseconds
-            chrono::milliseconds timeLimit(32);
-
-            // Run the 3-opt algorithm
-            vector<int> tour = threeOpt(local_points, timeLimit);
-            cout << tour.size() << ' ';
-            for (int idx: tour) cout << ori_idx[idx] << ' ';
-            cout << '\n';
+            groups.push_back(local_points);
         }
+    }
+
+    // clustering(groups, adj);
+
+    vector<vector<pll>> clusters(k);
+    for (int i=0; i<k; ++i) {
+        for (auto[p, _]: groups[i]) {
+            clusters[i].push_back(p);
+        }
+    }
+    
+    for (int i=0; i<k; ++i) {
+        // Set the time limit to 32 milliseconds
+        chrono::milliseconds timeLimit(32);
+
+        // Run the 3-opt algorithm
+        vector<int> tour = threeOpt(clusters[i], timeLimit);
+        cout << tour.size() << ' ';
+        for (int idx: tour) cout << point_idx[clusters[i][idx]] << ' ';
+        cout << '\n';
     }
 }
 

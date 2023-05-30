@@ -9,6 +9,7 @@ typedef pair<int, int> pii;
 void solve(int idx) {
     int k = 140;
     vector<vector<int>> tour(k);
+    set<int> checker;
     for (int i=0; i<k; ++i) {
         int cnt;
         cin >> cnt;
@@ -16,8 +17,13 @@ void solve(int idx) {
             int x;
             cin >> x;
             tour[i].push_back(x);
+            if (checker.find(x) != checker.end()) {
+                assert(false);
+            }
+            checker.insert(x);
         }
     }
+    assert(checker.size() == 8000);
 
     string s1 = "data/data";
     string s2 = to_string(idx);
