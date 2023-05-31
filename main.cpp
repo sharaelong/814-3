@@ -14,8 +14,17 @@ double distance(const pll& p1, const pll& p2) {
     return sqrt(dx * dx + dy * dy);
 }
 
+double tourLength(const vector<pll>& points, const vector<int>& tour) {
+    double ret = 0;
+    int n = points.size();
+    for (int i=0; i<n; ++i) {
+        ret += distance(points[tour[i]], points[tour[(i+1) % n]]);
+    }
+    return ret;
+}
+
 // Function to perform the 3-opt algorithm
-vector<int> threeOpt(const vector<pll>& points, const chrono::milliseconds& timeLimit) {
+pair<double, vector<int>> threeOpt(const vector<pll>& points) {
     int n = points.size();
 
     // vector<int> bestTour;
@@ -133,24 +142,15 @@ vector<int> threeOpt(const vector<pll>& points, const chrono::milliseconds& time
         }
 
         // Break the loop if no improvement is made or time limit is exceeded
-        auto currentTime = chrono::high_resolution_clock::now();
-        auto elapsedTime = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime);
-        if (!improvement || elapsedTime > timeLimit) {
+        // auto currentTime = chrono::high_resolution_clock::now();
+        // auto elapsedTime = chrono::duration_cast<chrono::milliseconds>(currentTime - startTime);
+        // if (!improvement || elapsedTime > timeLimit) {
+        if (!improvement) {
             break;
         }
     }
 
-    return tour;
-}
-
-double weightOfCluster(const vector<pair<pll, double>>& points) {
-    double ret = 0;
-    // for (auto[p, _]: points) {
-    //     ret += p.second;
-    // }
-    ret = 1;
-    ret *= sqrt(points.size());
-    return ret;
+    return { tourLength(points, tour), tour };
 }
 
 // Function to calculate the dot product between two vectors
@@ -159,11 +159,11 @@ ll dotProduct(const pll& p1, const pll& p2) {
 }
 
 // Function to calculate the center of mass of a group of points
-pll calculateCenterOfMass(vector<pair<pll, double>>& points) {
+pll calculateCenterOfMass(const vector<pll>& points) {
     ll sumX = 0, sumY = 0;
     for (const auto& p : points) {
-        sumX += p.first.first;
-        sumY += p.first.second;
+        sumX += p.first;
+        sumY += p.second;
     }
     ll centerX = sumX / points.size();
     ll centerY = sumY / points.size();
@@ -171,11 +171,11 @@ pll calculateCenterOfMass(vector<pair<pll, double>>& points) {
 }
 
 // Function to find the point in group A mostly oriented in a given direction
-int findPointInGroupA(const vector<pair<pll, double>>& groupA, const pll& direction) {
+int findPointInGroupA(const vector<pll>& groupA, const pll& direction) {
     int bestPointIdx = 0;
-    ll maxDotProduct = dotProduct(groupA[0].first, direction);
+    ll maxDotProduct = dotProduct(groupA[0], direction);
     for (int i=0; i<groupA.size(); ++i) {
-        const auto& p = groupA[i].first;
+        const auto& p = groupA[i];
         ll currentDotProduct = dotProduct(p, direction);
         if (currentDotProduct > maxDotProduct) {
             maxDotProduct = currentDotProduct;
@@ -185,51 +185,7 @@ int findPointInGroupA(const vector<pair<pll, double>>& groupA, const pll& direct
     return bestPointIdx;
 }
 
-void clustering(vector<vector<pair<pll, double>>>& groups, const vector<vector<int>>& adj) {
-    int k = groups.size();
-    for (int it=0; it<500; ++it) {
-        vector<double> weights(k);
-        for (int i=0; i<k; ++i) {
-            weights[i] = weightOfCluster(groups[i]);
-            weights[i] *= weights[i];
-        }
-        // print(weights);
-
-        // Create a discrete distribution based on the weights
-        discrete_distribution<int> distribution(weights.begin(), weights.end());
-
-        // Create a random number generator
-        random_device rd;
-        mt19937 gen(rd());
-
-        // Sample an index randomly based on the weights
-        int target = distribution(gen);
-
-        int min_target = -1;
-        double min_weight = numeric_limits<double>::max();
-        for (int neigh: adj[target]) {
-            double weight = weightOfCluster(groups[neigh]);
-            if (min_weight > weight) {
-                min_weight = weight;
-                min_target = neigh;
-            }
-        }
-
-        pll COMfrom = calculateCenterOfMass(groups[target]);
-        pll COMto = calculateCenterOfMass(groups[min_target]);
-        pll v = { COMto.first - COMfrom.first, COMto.second - COMto.second };
-        int bestPointIdx = findPointInGroupA(groups[target], v);
-        auto cpy = groups[target][bestPointIdx];
-        groups[target].erase(groups[target].begin() + bestPointIdx);
-        groups[min_target].push_back(cpy);
-    }
-}
-
 void solve() {
-#ifdef SHARAELONG
-    freopen("data/data1.in", "r", stdin);
-#endif
-
     int n, k;
     cin >> n >> k;
     n = 8000;
@@ -263,14 +219,14 @@ void solve() {
         }
     }
     
-    vector<vector<pair<pll, double>>> groups;
+    vector<vector<pll>> groups;
     for (int i=0; i<10; ++i) {
         for (int j=0; j<14; ++j) {
-            vector<pair<pll, double>> local_points;
+            vector<pll> local_points;
             for (int l=0; l<n; ++l) {
                 auto[x, y] = points[l];
                 if (dx * i <= x && x < dx * (i+1) && dy * j <= y && y < dy * (j+1)) {
-                    local_points.push_back({ points[l], 1.0 });
+                    local_points.push_back(points[l]);
                 }
             }
             groups.push_back(local_points);
@@ -279,21 +235,119 @@ void solve() {
 
     // clustering(groups, adj);
 
-    vector<vector<pll>> clusters(k);
+    vector<double> tourLen(k);
     for (int i=0; i<k; ++i) {
-        for (auto[p, _]: groups[i]) {
-            clusters[i].push_back(p);
-        }
+        auto result = threeOpt(groups[i]);
+        tourLen[i] = result.first;
     }
-    
+
+    for (int it=1; it<=200; ++it) {
+        random_device rd;
+        mt19937 gen(rd());
+
+        if (it & 1) {
+        vector<double> prob(k);
+        for (int i=0; i<k; ++i) {
+            prob[i] = exp((tourLen[i]-400000) / 30000);
+        }
+        discrete_distribution<int> distribution(prob.begin(), prob.end());
+        
+        // int from = max_element(tourLen.begin(), tourLen.end()) - tourLen.begin();
+        int from = distribution(gen);
+        
+        vector<double> tmp;
+        vector<int> tmp_idx;
+        for (int there: adj[from]) {
+            if (tourLen[there] < tourLen[from]) {
+                tmp.push_back(tourLen[there]);
+                tmp_idx.push_back(there);
+            }
+        }
+        if (tmp.empty()) continue;
+
+        uniform_int_distribution<int> distribution2(0, tmp.size()-1);
+        
+        // int to = tmp_idx[min_element(tmp.begin(), tmp.end()) - tmp.begin()];
+        int to = tmp_idx[distribution2(gen)];
+
+        pll COMfrom = calculateCenterOfMass(groups[from]);
+        pll COMto = calculateCenterOfMass(groups[to]);
+        pll v = { COMto.first - COMfrom.first, COMto.second - COMto.second };
+        int bestPointIdx = findPointInGroupA(groups[from], v);
+        auto cpy = groups[from][bestPointIdx];
+        groups[from].erase(groups[from].begin() + bestPointIdx);
+        groups[to].push_back(cpy);
+
+        double fromcpy = tourLen[from];
+        double tocpy = tourLen[to];
+        // print(it & 1, tourLen[from], tourLen[to]);
+        tourLen[from] = threeOpt(groups[from]).first;
+        tourLen[to] = threeOpt(groups[to]).first;
+        if (max(tourLen[from], tourLen[to]) > fromcpy + (30000 / sqrt(it))) {
+            tourLen[from] = fromcpy;
+            tourLen[to] = tocpy;
+            groups[from].push_back(groups[to].back());
+            groups[to].pop_back();
+        }
+        // print(it & 1, tourLen[from], tourLen[to]);
+        }
+        // } else {
+        //     vector<double> prob(k);
+        // for (int i=0; i<k; ++i) {
+        //     prob[i] = exp((400000-tourLen[i]) / 30000);
+        // }
+        // discrete_distribution<int> distribution(prob.begin(), prob.end());
+        
+        // // int from = max_element(tourLen.begin(), tourLen.end()) - tourLen.begin();
+        // int from = distribution(gen);
+        
+        // vector<double> tmp;
+        // vector<int> tmp_idx;
+        // for (int there: adj[from]) {
+        //     if (tourLen[there] > tourLen[from]) {
+        //         tmp.push_back(tourLen[there]);
+        //         tmp_idx.push_back(there);
+        //     }
+        // }
+        // if (tmp.empty()) continue;
+
+        // uniform_int_distribution<int> distribution2(0, tmp.size()-1);
+        
+        // // int to = tmp_idx[min_element(tmp.begin(), tmp.end()) - tmp.begin()];
+        // int to = tmp_idx[distribution2(gen)];
+
+        // pll COMfrom = calculateCenterOfMass(groups[from]);
+        // pll COMto = calculateCenterOfMass(groups[to]);
+        // pll v = { COMto.first - COMfrom.first, COMto.second - COMto.second };
+        // int bestPointIdx = findPointInGroupA(groups[from], v);
+        // auto cpy = groups[from][bestPointIdx];
+        // groups[from].erase(groups[from].begin() + bestPointIdx);
+        // groups[to].push_back(cpy);
+
+        // double fromcpy = tourLen[from];
+        // double tocpy = tourLen[to];
+        // // print(it & 1, tourLen[from], tourLen[to]);
+        // tourLen[from] = threeOpt(groups[from]).first;
+        // tourLen[to] = threeOpt(groups[to]).first;
+        // if ((fromcpy < tourLen[from] && tocpy < tourLen[to]) || min(tourLen[from], tourLen[to]) < fromcpy - (30000 / sqrt(it))) {
+        //     tourLen[from] = fromcpy;
+        //     tourLen[to] = tocpy;
+        //     groups[from].push_back(groups[to].back());
+        //     groups[to].pop_back();
+        // }
+        // // print(it & 1, tourLen[from], tourLen[to]);
+        // }
+    }
+
     for (int i=0; i<k; ++i) {
         // Set the time limit to 32 milliseconds
-        chrono::milliseconds timeLimit(32);
+        // chrono::milliseconds timeLimit(32);
 
         // Run the 3-opt algorithm
-        vector<int> tour = threeOpt(clusters[i], timeLimit);
+        auto tmp = threeOpt(groups[i]);
+        vector<int> tour = tmp.second;
         cout << tour.size() << ' ';
-        for (int idx: tour) cout << point_idx[clusters[i][idx]] << ' ';
+        for (int idx: tour) cout << point_idx[groups[i][idx]] << ' ';
         cout << '\n';
     }
 }

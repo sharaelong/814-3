@@ -43,20 +43,20 @@ void solve(int idx) {
     double score = 0; 
     for (auto v: tour) {
         double tmp = 0;
-        v.push_back(v[0]);
-        for (int i=0; i+1<v.size(); ++i) {
-            ll dx = points[v[i]].first - points[v[i+1]].first;
-            ll dy = points[v[i]].second - points[v[i+1]].second;
+        for (int i=0; i<v.size(); ++i) {
+            ll dx = points[v[i]].first - points[v[(i+1) % v.size()]].first;
+            ll dy = points[v[i]].second - points[v[(i+1) % v.size()]].second;
             tmp += sqrt(dx*dx + dy*dy);
         }
         score = max(score, tmp);
     }
-    cout << fixed << setprecision(2) << score << '\n';
+    cout << score << '\n';
 }
 
 int main(int argc, char **argv) {
     ios_base::sync_with_stdio(false);
     cin.tie(nullptr);
-
+    
+    cout << fixed << setprecision(2);
     solve(atoi(argv[1]));
 }

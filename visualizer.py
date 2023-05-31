@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 def visualize_clusters(filename):
     with open(filename, 'r') as file:
         n, k = map(int, file.readline().split())
-        points = [list(map(int, line.split())) for line in file.readlines()[:n]]
+        points = [list(map(int, file.readline().split())) for _ in range(n)]
         clusters = [list(map(int, line.split()[1:])) for line in file.readlines()]
 
     # Extract the coordinates of the points
