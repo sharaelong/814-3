@@ -30,9 +30,21 @@ Score: 25835278.68
 Time: 1384ms  
 I used 3-opt heuristic instead of multiple 2-opt heuristic. It showed 2.6% performance gain, which is similar as other resource's experiment results. Check every 3-opt moves and select best move. However, I can see execution time is increased sharply.  
 
+7. Dynamic clustering  
+Score: 25241052.9  
+Time: 4352ms  
+This clustering algorithm tries moving points from a randomly selected cluster to a randomly selected adjacent cluster. Cluster is initialized with 10x14 grid, so neighbors of certain cluster refer to those connected on four sides. The selection probability is exponential value to current cluster's tour length. When point moving increases max tour length between two cluster, rollback that changes.  
+Some lessons I got from this:
+- BOJ is much slower than my local machine. It's easy to overestimate algorithm performance.
+- Just moving single point is really weak.
+- Exponential probability of choice is good heuristic, indeed it seems necessary.
+- 3-opt is not good to use as a blackbox for its huge variance.
+- Heuristic depends on area of cluster convex hull is not good, because sharp shape has small area but increases tour length significantly.
+
 # Utilities
 - `score.sh`: compile main source code and score calculator, print score. `tmp-file` is temporary file for saving result.
 - `gen.sh`: re-generate test cases.
+- `visualizer.py`: visualize cluster result.
 
 # Useful resources
 - [Traveling salesman problem (wikipedia)](https://en.wikipedia.org/wiki/Travelling_salesman_problem)

@@ -241,11 +241,10 @@ void solve() {
         tourLen[i] = result.first;
     }
 
-    for (int it=1; it<=200; ++it) {
+    for (int it=1; it<=80; ++it) {
         random_device rd;
         mt19937 gen(rd());
 
-        if (it & 1) {
         vector<double> prob(k);
         for (int i=0; i<k; ++i) {
             prob[i] = exp((tourLen[i]-400000) / 30000);
@@ -280,63 +279,16 @@ void solve() {
 
         double fromcpy = tourLen[from];
         double tocpy = tourLen[to];
-        // print(it & 1, tourLen[from], tourLen[to]);
+        // print(0, tourLen[from], tourLen[to]);
         tourLen[from] = threeOpt(groups[from]).first;
         tourLen[to] = threeOpt(groups[to]).first;
-        if (max(tourLen[from], tourLen[to]) > fromcpy + (30000 / sqrt(it))) {
+        if (max(tourLen[from], tourLen[to]) > fromcpy) {
             tourLen[from] = fromcpy;
             tourLen[to] = tocpy;
             groups[from].push_back(groups[to].back());
             groups[to].pop_back();
         }
-        // print(it & 1, tourLen[from], tourLen[to]);
-        }
-        // } else {
-        //     vector<double> prob(k);
-        // for (int i=0; i<k; ++i) {
-        //     prob[i] = exp((400000-tourLen[i]) / 30000);
-        // }
-        // discrete_distribution<int> distribution(prob.begin(), prob.end());
-        
-        // // int from = max_element(tourLen.begin(), tourLen.end()) - tourLen.begin();
-        // int from = distribution(gen);
-        
-        // vector<double> tmp;
-        // vector<int> tmp_idx;
-        // for (int there: adj[from]) {
-        //     if (tourLen[there] > tourLen[from]) {
-        //         tmp.push_back(tourLen[there]);
-        //         tmp_idx.push_back(there);
-        //     }
-        // }
-        // if (tmp.empty()) continue;
-
-        // uniform_int_distribution<int> distribution2(0, tmp.size()-1);
-        
-        // // int to = tmp_idx[min_element(tmp.begin(), tmp.end()) - tmp.begin()];
-        // int to = tmp_idx[distribution2(gen)];
-
-        // pll COMfrom = calculateCenterOfMass(groups[from]);
-        // pll COMto = calculateCenterOfMass(groups[to]);
-        // pll v = { COMto.first - COMfrom.first, COMto.second - COMto.second };
-        // int bestPointIdx = findPointInGroupA(groups[from], v);
-        // auto cpy = groups[from][bestPointIdx];
-        // groups[from].erase(groups[from].begin() + bestPointIdx);
-        // groups[to].push_back(cpy);
-
-        // double fromcpy = tourLen[from];
-        // double tocpy = tourLen[to];
-        // // print(it & 1, tourLen[from], tourLen[to]);
-        // tourLen[from] = threeOpt(groups[from]).first;
-        // tourLen[to] = threeOpt(groups[to]).first;
-        // if ((fromcpy < tourLen[from] && tocpy < tourLen[to]) || min(tourLen[from], tourLen[to]) < fromcpy - (30000 / sqrt(it))) {
-        //     tourLen[from] = fromcpy;
-        //     tourLen[to] = tocpy;
-        //     groups[from].push_back(groups[to].back());
-        //     groups[to].pop_back();
-        // }
-        // // print(it & 1, tourLen[from], tourLen[to]);
-        // }
+        // print(1, tourLen[from], tourLen[to]);
     }
 
     for (int i=0; i<k; ++i) {
