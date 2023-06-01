@@ -444,18 +444,42 @@ const int MAX_N = 8000;
 
 bool adjmat[MAX_N][MAX_N];
 
-bool isConnected(const vector<int>& gp) {
+bool isConnected(const vector<int>& gp, const vector<vector<int>>& adj) {
     DisjointSet dsu(gp.size());
     int comp_cnt = gp.size();
     for (int i=0; i<gp.size(); ++i) {
-        for (int j=i+1; j<gp.size(); ++j) {
-            if (adjmat[gp[i]][gp[j]] && dsu.find(i) != dsu.find(j)) {
+        for (int there: adj[gp[i]]) {
+            int j = find(gp.begin(), gp.end(), there) - gp.begin();
+            if (j < gp.size() && dsu.find(i) != dsu.find(j)) {
                 dsu.merge(i, j);
                 comp_cnt--;
             }
         }
     }
     return comp_cnt == 1;
+}
+
+double mstCost(const vector<int>& gp, const vector<pt>& pts) {
+    vector<tuple<ll, int, int>> edges;
+    for (int i=0; i<gp.size(); ++i) {
+        for (int j=i+1; j<gp.size(); ++j) {
+            auto tmp = pts[gp[i]] - pts[gp[j]];
+            edges.push_back({ tmp.sqrLength(), i, j });
+        }
+    }
+    
+    sort(edges.begin(), edges.end());
+    
+    ll ret = 0;
+    DisjointSet dsu(gp.size());
+    for (const auto&[d, i, j]: edges) {
+        if (dsu.find(i) != dsu.find(j)) {
+            dsu.merge(i, j);
+            ret += d;
+        }
+    }
+    
+    return sqrt(ret);
 }
 
 void solve() {
@@ -481,21 +505,26 @@ void solve() {
     auto triangles = delaunay(pt_wrap);
 
     vector<vector<int>> adj(n);
-    // vector<int> pt_inside(triangles.size());
     for (int i=0; i<triangles.size(); ++i) {
         const auto&[a, b, c] = triangles[i];
         int ai = point_idx[{ a.x, a.y }];
         int bi = point_idx[{ b.x, b.y }];
         int ci = point_idx[{ c.x, c.y }];
-        adj[ai].push_back(bi);
-        adj[bi].push_back(ai);
-        adj[bi].push_back(ci);
-        adj[ci].push_back(bi);
-        adj[ci].push_back(ai);
-        adj[ai].push_back(ci);
-        adjmat[ai][bi] = adjmat[bi][ai] = true;
-        adjmat[bi][ci] = adjmat[ci][bi] = true;
-        adjmat[ci][ai] = adjmat[ai][ci] = true;
+        if ((a-b).sqrLength() < 150000000) {
+            adj[ai].push_back(bi);
+            adj[bi].push_back(ai);
+            adjmat[ai][bi] = adjmat[bi][ai] = true;
+        }
+        if ((b-c).sqrLength() < 150000000) {
+            adj[bi].push_back(ci);
+            adj[ci].push_back(bi);
+            adjmat[bi][ci] = adjmat[ci][bi] = true;
+        }
+        if ((c-a).sqrLength() < 150000000) {
+            adj[ci].push_back(ai);
+            adj[ai].push_back(ci);
+            adjmat[ci][ai] = adjmat[ai][ci] = true;
+        }
     }
     
     vector<double> circle_area(n);
@@ -506,7 +535,6 @@ void solve() {
             mn = min(mn, d.sqrLength());
         }
         circle_area[i] = log2(mn) - 5;
-        // cout << circle_area[i] << '\n';
     }
 
     const int MAX_COORD = 814000;
@@ -519,22 +547,23 @@ void solve() {
     for (int i=0; i<10; ++i) {
         for (int j=0; j<14; ++j) {
             vector<int> local_points;
-            double w_sum = 0;
+            // double w_sum = 0;
             for (int l=0; l<n; ++l) {
                 auto[x, y] = points[l];
                 if (dx * i <= x && x < dx * (i+1) && dy * j <= y && y < dy * (j+1)) {
                     local_points.push_back(l);
                     belong[l] = groups.size();
-                    w_sum += circle_area[l];
+                    // w_sum += circle_area[l];
                 }
             }
             groups.push_back(local_points);
-            weight.push_back(w_sum);
+            weight.push_back(mstCost(local_points, pt_wrap));
+            // cout << weight.back() << '\n';
         }
     }
     // print(weight);
 
-    for (int it=2; it<=10000; ++it) {
+    for (int it=2; it<=4000; ++it) {
         random_device rd;
         mt19937 gen(rd());
 
@@ -581,34 +610,42 @@ void solve() {
             for (int there: adj[here]) {
                 if (belong[there] == to) {
                     if (weight[from] < weight[to]) { // if true, why they named from, to? lol
-                        if (weight[from] + circle_area[there] - (50 / log2(it)) < weight[to] - circle_area[there]) {
-                            weight[from] += circle_area[there];
-                            weight[to] -= circle_area[there];
-                            groups[to].erase(remove(groups[to].begin(), groups[to].end(), there), groups[to].end());
-                            if (isConnected(groups[to])) {
-                                groups[from].push_back(there);
-                                belong[there] = from;
-                                found = true;
-                                // print(there, circle_area[there]);
-                                break;
-                            } else {
-                                groups[to].push_back(there);
-                            }
+                        groups[to].erase(remove(groups[to].begin(), groups[to].end(), there), groups[to].end());
+                        if (!isConnected(groups[to], adj)) {
+                            groups[to].push_back(there);
+                            continue;
+                        }
+                        
+                        double updated = mstCost(groups[from], pt_wrap);
+                        if (updated < max(weight[from], weight[to]) + (50000 / log2(it))) {
+                            groups[from].push_back(there);
+                            belong[there] = from;
+                            weight[to] = updated;
+                            weight[from] = mstCost(groups[from], pt_wrap);
+                            // print(weight[from], weight[to]);
+                            found = true;
+                            break;
+                        } else {
+                            groups[to].push_back(there);
                         }
                     } else if (weight[from] > weight[to]) {
-                        if (weight[from] - circle_area[here] > weight[to] + circle_area[here] - (100000 / log2(it))) {
-                            weight[from] -= circle_area[here];
-                            weight[to] += circle_area[here];
-                            groups[from].erase(remove(groups[from].begin(), groups[from].end(), here), groups[from].end());
-                            if (isConnected(groups[from])) {
-                                groups[to].push_back(here);
-                                belong[here] = to;
-                                // print(here, circle_area[here]);
-                                found = true;
-                                break;
-                            } else {
-                                groups[from].push_back(here);
-                            }
+                        groups[from].erase(remove(groups[from].begin(), groups[from].end(), here), groups[from].end());
+                        if (!isConnected(groups[from], adj)) {
+                            groups[from].push_back(here);
+                            continue;
+                        }
+                        
+                        double updated = mstCost(groups[to], pt_wrap);
+                        if (updated < max(weight[from], weight[to]) + (50000 / log2(it))) {
+                            groups[to].push_back(here);
+                            belong[here] = to;
+                            weight[from] = updated;
+                            weight[to] = mstCost(groups[to], pt_wrap);
+                            // print(weight[from], weight[to]);
+                            found = true;
+                            break;
+                        } else {
+                            groups[from].push_back(here);
                         }
                     }
                 }

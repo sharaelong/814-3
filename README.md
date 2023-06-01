@@ -41,6 +41,14 @@ Some lessons I got from this:
 - 3-opt is not good to use as a blackbox for its huge variance.
 - Heuristic depends on area of cluster convex hull is not good, because sharp shape has small area but increases tour length significantly.
 
+8. Some fancy dynamic clustering
+Score: Catastrophe!
+Time: Also too long!
+I used many approaches in this step. But everything failed. Inscribed circle area of delaunay triangulation, MST length of group, connectivity constraint in every move are not enough to avoid points floated over space wide. Inherently triangulation become weird at the edge of the region. To meet this issue I tried to define 'adjacency' between two points at maximum distance of d, but it was not good approach either.
+
+# Remaining Ideas
+- Grouping some points before any calculation. For example we can assume that two points within a distance of 1000 are expected to belong in same group at last. Then treat this grouped points as single point, 7th approach will become better because single point movement is actually multiple points movement.
+
 # Utilities
 - `score.sh`: compile main source code and score calculator, print score. `tmp-file` is temporary file for saving result.
 - `gen.sh`: re-generate test cases.
