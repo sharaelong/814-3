@@ -41,10 +41,15 @@ Some lessons I got from this:
 - 3-opt is not good to use as a blackbox for its huge variance.
 - Heuristic depends on area of cluster convex hull is not good, because sharp shape has small area but increases tour length significantly.
 
-8. Some fancy dynamic clustering
-Score: Catastrophe!
-Time: Also too long!
-I used many approaches in this step. But everything failed. Inscribed circle area of delaunay triangulation, MST length of group, connectivity constraint in every move are not enough to avoid points floated over space wide. Inherently triangulation become weird at the edge of the region. To meet this issue I tried to define 'adjacency' between two points at maximum distance of d, but it was not good approach either.
+8. Some fancy dynamic clustering  
+Score: Catastrophe!  
+Time: Also too long!  
+I used many approaches in this step. But everything failed. Inscribed circle area of delaunay triangulation, MST length of group, connectivity constraint in every move are not enough to avoid points floated over space wide. Inherently triangulation become weird at the edge of the region. To meet this issue I tried to define 'adjacency' between two points at maximum distance of d, but it was not good approach either.  
+
+9. Cut edges of maximum length cluster  
+Score: 25454746.62  
+Time: 3956ms  
+When initialize cluster with 10x14 grid, its tour length shows kind of like normal distribution with sigma about 30000. So we can think of cut the edges of two biggest cluster and distribute edges to adjacent grid will be good at lower maximum tour length.  
 
 # Remaining Ideas
 - Grouping some points before any calculation. For example we can assume that two points within a distance of 1000 are expected to belong in same group at last. Then treat this grouped points as single point, 7th approach will become better because single point movement is actually multiple points movement.

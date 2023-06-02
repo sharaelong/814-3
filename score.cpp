@@ -18,7 +18,7 @@ void solve(int idx) {
             cin >> x;
             tour[i].push_back(x);
             if (checker.find(x) != checker.end()) {
-                assert(false);
+                assert(checker.find(x) != checker.end());
             }
             checker.insert(x);
         }
