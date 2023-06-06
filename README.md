@@ -51,6 +51,11 @@ Score: 25454746.62
 Time: 3956ms  
 When initialize cluster with 10x14 grid, its tour length shows kind of like normal distribution with sigma about 30000. So we can think of cut the edges of two biggest cluster and distribute edges to adjacent grid will be good at lower maximum tour length.  
 
+10. Shift rectangular grid
+Score: 24768752.05  
+Time: 3856ms  
+Simple 10x14 grid gives approximate normal distribution on tour length in each cluster. So removing outlier gives big performance improvement. From this observation, this algorithm traverse every row in grid. In each row find biggest and smallest cluster by tour length, and move fragments length of `DX` between that clusters. Other clusters between that clusters are 'shifted', preserving their area. Also same process will operated for every column, shifting fragments length of `DY`.  
+
 # Remaining Ideas
 - Grouping some points before any calculation. For example we can assume that two points within a distance of 1000 are expected to belong in same group at last. Then treat this grouped points as single point, 7th approach will become better because single point movement is actually multiple points movement.
 

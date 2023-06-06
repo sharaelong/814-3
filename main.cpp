@@ -183,69 +183,111 @@ void solve() {
         for (int idx: groups[i]) convert.push_back(points[idx]);
 
         tourLen[i] = min(tourLen[i], threeOpt(convert).first);
-        tourLen[i] = min(tourLen[i], threeOpt(convert).first);
+        // tourLen[i] = min(tourLen[i], threeOpt(convert).first);
         // cout << tourLen[i] << ' ' << i / 14 << ' ' << i % 14 << '\n';
     }
+    
+    const int DX = 8000;
+    const int DY = 3000;
 
-    auto lambdaFunc = [&](int gidx) -> void {
-        
-        // print(tourLen[gidx]);
-        int x1 = dx * (gidx / 14), x2 = x1 + dx;
-        int y1 = dy * (gidx % 14), y2 = y1 + dy;
-
-        const int DX = 2500;
-        const int DY = DX * 10 / 14;
-        
-        vector<int> gcpy;
-        for (int i=0; i<groups[gidx].size(); ++i) {
-            int pidx = groups[gidx][i];
-            auto[x, y] = points[pidx];
-            
-            bool inserted = false;
-            if (!(x1 + DX <= x && x <= x2 - DX && y1 + DY <= y && y <= y2 - DY)) {
-                if ((ll)(y-y1) * dx < (ll)(x-x1) * dy && (ll)(y-y1) * dx < (ll)(x2-x) * dy) {
-                    if (gidx % 14 > 0) {
-                        groups[gidx-1].push_back(pidx);
-                        inserted = true;
-                    }
-                } else if ((ll)(y-y1) * dx > (ll)(x-x1) * dy && (ll)(y-y1) * dx < (ll)(x2-x) * dy) {
-                    if (gidx / 14 > 0) {
-                        groups[gidx-14].push_back(pidx);
-                        inserted = true;
-                    }
-                } else if ((ll)(y-y1) * dx > (ll)(x-x1) * dy && (ll)(y-y1) * dx > (ll)(x2-x) * dy) {
-                    if (gidx % 14 < 14 - 1) {
-                        groups[gidx+1].push_back(pidx);
-                        inserted = true;
-                    }
-                } else {
-                    if (gidx / 14 < 10 - 1) {
-                        groups[gidx+14].push_back(pidx);
-                        inserted = true;
-                    }
-                }
+    for (int j=0; j<14; ++j) {
+        int i1 = -1, i2 = -1;
+        double mn = 1e9, mx = -1e9;
+        for (int i=0; i<10; ++i) {
+            if (tourLen[14 * i + j] < mn) {
+                mn = tourLen[14 * i + j];
+                i1 = i;
             }
-            
-            if (!inserted) gcpy.push_back(pidx);
+            if (tourLen[14 * i + j] > mx) {
+                mx = tourLen[14 * i + j];
+                i2 = i;
+            }
         }
 
-        groups[gidx] = gcpy;
+        // print(j, i1, mn, i2, mx);
+        assert(i1 != i2);
         
-        // vector<pll> convert;
-        // for (int idx: groups[gidx]) convert.push_back(points[idx]);
-        // print(threeOpt(convert).first);
-        // print(threeOpt(convert).first);
-    };
+        if (i1 < i2) {
+            for (int i=i1+1; i<=i2; ++i) {
+                vector<int> gcpy;
+                for (int pidx: groups[14 * i + j]) {
+                    auto[x, y] = points[pidx];
+                    if (x <= dx * i + DX) {
+                        groups[14 * (i-1) + j].push_back(pidx);
+                    } else {
+                        gcpy.push_back(pidx);
+                    }
+                }
+                groups[14 * i + j] = gcpy;
+            }
+        } else {
+            for (int i=i2; i<=i1-1; ++i) {
+                vector<int> gcpy;
+                for (int pidx: groups[14 * i + j]) {
+                    auto[x, y] = points[pidx];
+                    if (x >= dx * (i+1) - DX) {
+                        groups[14 * (i+1) + j].push_back(pidx);
+                    } else {
+                        gcpy.push_back(pidx);
+                    }
+                }
+                groups[14 * i + j] = gcpy;
+            }
+        }
+    }
 
-    // int gidx = max_element(tourLen.begin(), tourLen.end()) - tourLen.begin();
-    vector<int> gidx(k);
-    iota(gidx.begin(), gidx.end(), 0);
-    sort(gidx.begin(), gidx.end(), [&](int a, int b) {
-        return tourLen[a] > tourLen[b];
-    });
+    for (int i=0; i<k; ++i) {
+        vector<pll> convert;
+        for (int idx: groups[i]) convert.push_back(points[idx]);
 
-    lambdaFunc(gidx[0]);
-    lambdaFunc(gidx[1]);
+        tourLen[i] = threeOpt(convert).first;
+    }
+    
+    for (int i=0; i<10; ++i) {
+        int j1 = -1, j2 = -1;
+        double mn = 1e9, mx = -1e9;
+        for (int j=0; j<14; ++j) {
+            if (tourLen[14 * i + j] < mn) {
+                mn = tourLen[14 * i + j];
+                j1 = j;
+            }
+            if (tourLen[14 * i + j] > mx) {
+                mx = tourLen[14 * i + j];
+                j2 = j;
+            }
+        }
+
+        // print(j, i1, mn, i2, mx);
+        assert(j1 != j2);
+        
+        if (j1 < j2) {
+            for (int j=j1+1; j<=j2; ++j) {
+                vector<int> gcpy;
+                for (int pidx: groups[14 * i + j]) {
+                    auto[x, y] = points[pidx];
+                    if (y <= dy * j + DY) {
+                        groups[14 * i + (j-1)].push_back(pidx);
+                    } else {
+                        gcpy.push_back(pidx);
+                    }
+                }
+                groups[14 * i + j] = gcpy;
+            }
+        } else {
+            for (int j=j2; j<=j1-1; ++j) {
+                vector<int> gcpy;
+                for (int pidx: groups[14 * i + j]) {
+                    auto[x, y] = points[pidx];
+                    if (y >= dy * (j+1) - DY) {
+                        groups[14 * i + (j+1)].push_back(pidx);
+                    } else {
+                        gcpy.push_back(pidx);
+                    }
+                }
+                groups[14 * i + j] = gcpy;
+            }
+        }
+    }
 
     for (int i=0; i<k; ++i) {
         // Run the 3-opt algorithm
@@ -255,6 +297,7 @@ void solve() {
         auto tmp = threeOpt(convert);
 
         vector<int> tour = tmp.second;
+        // cout << tmp.first << endl;
         cout << tour.size() << ' ';
         for (int idx: tour) cout << groups[i][idx]+1 << ' ';
         cout << '\n';
