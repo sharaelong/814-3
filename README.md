@@ -56,6 +56,12 @@ Score: 24768752.05
 Time: 3856ms  
 Simple 10x14 grid gives approximate normal distribution on tour length in each cluster. So removing outlier gives big performance improvement. From this observation, this algorithm traverse every row in grid. In each row find biggest and smallest cluster by tour length, and move fragments length of `DX` between that clusters. Other clusters between that clusters are 'shifted', preserving their area. Also same process will operated for every column, shifting fragments length of `DY`.  
 
+11. Shift rectangular grid (Advanced)
+Score: 24604028.2  
+Time: 3924ms  
+This is a extension of trial number 10. First in y-axis (14 cuts), calculate every tour length of initial grid and accumulate tour length which in same y-axis grid. Then regard as 14 metal bars with different mass. Cut it into 14 new bars with same mass. After that do the same thing in x-axis, but this time each y-line is independent. We have to do cutting only inside the same y-line.
+p.s. o3 and ofast don't bring us fast execution time. Maybe it's becuse reversing array is the most bottleneck of our code.
+
 # Remaining Ideas
 - Grouping some points before any calculation. For example we can assume that two points within a distance of 1000 are expected to belong in same group at last. Then treat this grouped points as single point, 7th approach will become better because single point movement is actually multiple points movement.
 

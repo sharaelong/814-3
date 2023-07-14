@@ -141,7 +141,28 @@ pair<double, vector<int>> threeOpt(const vector<pll>& points) {
     return { tourLength(points, tour), tour };
 }
 
-
+vector<double> cut(vector<double> bars) {
+    int n = bars.size();
+    vector<double> ret(n-1);
+    double m = accumulate(bars.begin(), bars.end(), 0.0) / n;
+    double accum_m = 0;
+    int cnt = 0;
+    double used_ratio = 0;
+    for (int i=0; i<n; ++i) {
+        if (cnt == n-1) break;
+        if (accum_m + bars[i] * (1.0 - used_ratio) >= m * (cnt+1)) {
+            ret[cnt] = (double)i + used_ratio + (m * (cnt+1) - accum_m) / bars[i];
+            used_ratio += (m * (cnt+1) - accum_m) / bars[i];
+            accum_m = m * (cnt+1);
+            cnt++;
+            i--;
+        } else {
+            accum_m += bars[i] * (1.0 - used_ratio);
+            used_ratio = 0;
+        }
+    }
+    return ret;
+}
 
 void solve() {
     int n, k;
@@ -181,114 +202,65 @@ void solve() {
         // Run the 3-opt algorithm
         vector<pll> convert;
         for (int idx: groups[i]) convert.push_back(points[idx]);
-
         tourLen[i] = min(tourLen[i], threeOpt(convert).first);
-        // tourLen[i] = min(tourLen[i], threeOpt(convert).first);
-        // cout << tourLen[i] << ' ' << i / 14 << ' ' << i % 14 << '\n';
     }
     
-    const int DX = 8000;
-    const int DY = 3000;
-
+    vector<double> w_ysum(14, 0);
     for (int j=0; j<14; ++j) {
-        int i1 = -1, i2 = -1;
-        double mn = 1e9, mx = -1e9;
-        for (int i=0; i<10; ++i) {
-            if (tourLen[14 * i + j] < mn) {
-                mn = tourLen[14 * i + j];
-                i1 = i;
-            }
-            if (tourLen[14 * i + j] > mx) {
-                mx = tourLen[14 * i + j];
-                i2 = i;
+        for (int i=0; i<10; ++i) w_ysum[j] += tourLen[14 * i + j];
+    }
+    vector<double> _ycut = cut(w_ysum);
+    vector<int> ycut;
+    for (double y: _ycut) ycut.push_back(y * dy);
+    // print(ycut);
+
+    for (int i=0; i<10; ++i) {
+        vector<vector<int>> local_points(14);
+        for (int l=0; l<n; ++l) {
+            auto[x, y] = points[l];
+            if (dx * i <= x && x < dx * (i+1)) {
+                int ynum = lower_bound(ycut.begin(), ycut.end(), y) - ycut.begin();
+                local_points[ynum].push_back(l);
             }
         }
-
-        // print(j, i1, mn, i2, mx);
-        assert(i1 != i2);
-        
-        if (i1 < i2) {
-            for (int i=i1+1; i<=i2; ++i) {
-                vector<int> gcpy;
-                for (int pidx: groups[14 * i + j]) {
-                    auto[x, y] = points[pidx];
-                    if (x <= dx * i + DX) {
-                        groups[14 * (i-1) + j].push_back(pidx);
-                    } else {
-                        gcpy.push_back(pidx);
-                    }
-                }
-                groups[14 * i + j] = gcpy;
-            }
-        } else {
-            for (int i=i2; i<=i1-1; ++i) {
-                vector<int> gcpy;
-                for (int pidx: groups[14 * i + j]) {
-                    auto[x, y] = points[pidx];
-                    if (x >= dx * (i+1) - DX) {
-                        groups[14 * (i+1) + j].push_back(pidx);
-                    } else {
-                        gcpy.push_back(pidx);
-                    }
-                }
-                groups[14 * i + j] = gcpy;
-            }
+        for (int j=0; j<14; ++j) {
+            groups[14 * i + j] = local_points[j];
         }
     }
+    // print(1);
 
     for (int i=0; i<k; ++i) {
+        // Run the 3-opt algorithm
         vector<pll> convert;
         for (int idx: groups[i]) convert.push_back(points[idx]);
-
         tourLen[i] = threeOpt(convert).first;
     }
     
-    for (int i=0; i<10; ++i) {
-        int j1 = -1, j2 = -1;
-        double mn = 1e9, mx = -1e9;
-        for (int j=0; j<14; ++j) {
-            if (tourLen[14 * i + j] < mn) {
-                mn = tourLen[14 * i + j];
-                j1 = j;
-            }
-            if (tourLen[14 * i + j] > mx) {
-                mx = tourLen[14 * i + j];
-                j2 = j;
+    for (int j=0; j<14; ++j) {
+        vector<double> w_xsum(10);
+        for (int i=0; i<10; ++i) w_xsum[i] = tourLen[14 * i + j];
+        vector<double> _xcut = cut(w_xsum);
+        vector<int> xcut;
+        for (double x: _xcut) xcut.push_back(x * dx);
+        // print(j, w_xsum, _xcut, xcut);
+
+        vector<int> targets;
+        for (int i=0; i<10; ++i) {
+            for (int idx: groups[14 * i + j]) {
+                targets.push_back(idx);
             }
         }
-
-        // print(j, i1, mn, i2, mx);
-        assert(j1 != j2);
-        
-        if (j1 < j2) {
-            for (int j=j1+1; j<=j2; ++j) {
-                vector<int> gcpy;
-                for (int pidx: groups[14 * i + j]) {
-                    auto[x, y] = points[pidx];
-                    if (y <= dy * j + DY) {
-                        groups[14 * i + (j-1)].push_back(pidx);
-                    } else {
-                        gcpy.push_back(pidx);
-                    }
-                }
-                groups[14 * i + j] = gcpy;
-            }
-        } else {
-            for (int j=j2; j<=j1-1; ++j) {
-                vector<int> gcpy;
-                for (int pidx: groups[14 * i + j]) {
-                    auto[x, y] = points[pidx];
-                    if (y >= dy * (j+1) - DY) {
-                        groups[14 * i + (j+1)].push_back(pidx);
-                    } else {
-                        gcpy.push_back(pidx);
-                    }
-                }
-                groups[14 * i + j] = gcpy;
-            }
+        vector<vector<int>> local_points(10);
+        for (int l: targets) {
+            auto[x, y] = points[l];
+            int xnum = lower_bound(xcut.begin(), xcut.end(), x) - xcut.begin();
+            local_points[xnum].push_back(l);
+        }
+        for (int i=0; i<10; ++i) {
+            groups[14 * i + j] = local_points[i];
         }
     }
-
+ 
     for (int i=0; i<k; ++i) {
         // Run the 3-opt algorithm
         vector<pll> convert;
