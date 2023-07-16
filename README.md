@@ -62,6 +62,8 @@ Time: 3924ms
 This is a extension of trial number 10. First in y-axis (14 cuts), calculate every tour length of initial grid and accumulate tour length which in same y-axis grid. Then regard as 14 metal bars with different mass. Cut it into 14 new bars with same mass. After that do the same thing in x-axis, but this time each y-line is independent. We have to do cutting only inside the same y-line.
 p.s. o3 and ofast don't bring us fast execution time. Maybe it's becuse reversing array is the most bottleneck of our code.
 
+FYI) I embedded a [LKH solver](http://akira.ruc.dk/~keld/research/LKH/). For now `Gain23` function is weird in my embedding, so I just turned off. I have to test some options to optimize performance without losing ability to get optimum solution.
+
 # Remaining Ideas
 - Grouping some points before any calculation. For example we can assume that two points within a distance of 1000 are expected to belong in same group at last. Then treat this grouped points as single point, 7th approach will become better because single point movement is actually multiple points movement.
 
