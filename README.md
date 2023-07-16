@@ -64,6 +64,11 @@ p.s. o3 and ofast don't bring us fast execution time. Maybe it's becuse reversin
 
 FYI) I embedded a [LKH solver](http://akira.ruc.dk/~keld/research/LKH/). For now `Gain23` function is weird in my embedding, so I just turned off. I have to test some options to optimize performance without losing ability to get optimum solution.
 
+12. Embed LKH Solver
+Score: 23241597.44  
+Time: 3000ms  
+I finally successed embedding LKH solver, and it gives me about 6% of performance improvements. It seemed to give optimum solution in many instances, which leads my shifting algorithm can believe tour value. I used one level tree, maxcand=4, patchingA=1, patchingC=0 option with 1 run, 1 trial. Also it is worth to note that solver is even faster than my 3-opt code.
+
 # Remaining Ideas
 - Grouping some points before any calculation. For example we can assume that two points within a distance of 1000 are expected to belong in same group at last. Then treat this grouped points as single point, 7th approach will become better because single point movement is actually multiple points movement.
 

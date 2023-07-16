@@ -1,3 +1,4 @@
+#pragma GCC optimize("O3")
 #include <bits/stdc++.h>
 #ifdef SHARAELONG
 #include "debug.hpp"
@@ -79,14 +80,12 @@ typedef struct SwapRecord SwapRecord;
 typedef Node *(*MoveFunction) (Node * t1, Node * t2, GainType * G0,
                                GainType * Gain);
 typedef int (*CostFunction) (Node * Na, Node * Nb);
-typedef GainType (*MergeTourFunction) (void);
 
 /* Genetic.h */
 int MaxPopulationSize; /* The maximum size of the population */ 
 
 void AddToPopulation(GainType Cost);
 void ApplyCrossover(int i, int j);
-GainType MergeTourWithIndividual(int i);
 void ReplaceIndividualWithTour(int i, GainType Cost);
 int ReplacementIndividual(GainType Cost);
 
@@ -178,8 +177,6 @@ struct Node {
     Node *SubproblemSuc;  /* Successor in the SUBPROBLEM_TOUR file */
     Node *SubBestPred; /* The best predecessor node in a subproblem */
     Node *SubBestSuc;  /* The best successor node in a subproblem */
-    Node *MergePred;   /* Predecessor in the first MERGE_TOUR file */
-    Node **MergeSuc;   /* Successors in the MERGE_TOUR files */
     Node *Added1, *Added2; /* Pointers to the opposite end nodes
                               of added edges in a submove */
     Node *Deleted1, *Deleted2;  /* Pointers to the opposite end nodes
@@ -309,7 +306,6 @@ struct LKH {
     int MaxSwaps;   /* Maximum number of swaps made during the 
                        search for a move */
     int MaxTrials;  
-    int MergeTourFiles;     /* Number of MERGE_TOUR_FILEs */
     int MoveType;   /* Specifies the sequantial move type to be used 
                        in local search. A value K >= 2 signifies 
                        that a k-opt moves are tried for k <= K */
@@ -375,7 +371,7 @@ struct LKH {
     char *ParameterFileName, *ProblemFileName, *PiFileName,
         *TourFileName, *OutputTourFileName, *InputTourFileName,
         **CandidateFileName, **EdgeFileName, *InitialTourFileName,
-        *SubproblemTourFileName, **MergeTourFileName;
+        *SubproblemTourFileName;
     char *Name, *Type, *EdgeWeightType, *EdgeWeightFormat,
         *EdgeDataFormat, *NodeCoordType, *DisplayDataType;
     int CandidateSetSymmetric, CandidateSetType,
@@ -390,208 +386,17 @@ struct LKH {
         RohePartitioning, SierpinskiPartitioning,
         SubproblemBorders, SubproblemsCompressed, WeightType, WeightFormat;
 
-    FILE *ParameterFile, *ProblemFile, *PiFile, *InputTourFile,
-        *TourFile, *InitialTourFile, *SubproblemTourFile, **MergeTourFile;
+    FILE *ParameterFile, *ProblemFile, *PiFile,
+        *TourFile, *InitialTourFile;
     // CostFunction Distance;
     CostFunction c;
     // CostFunction D, C;
     // MoveFunction BestMove, BestSubsequentMove;
     MoveFunction BacktrackMove;
-    // MergeTourFunction MergeWithTour;
     
     /* LKHmain.c */
     GainType Cost, OldOptimum;
     double Time, LastTime;
-
-    /* MergeWithTourIPT */
-    GainType MergeWithTour()
-    {
-        int Rank = 0, Improved1 = 0, Improved2 = 0;
-        int SubSize1, SubSize2, MaxSubSize1, NewDimension = 0, Forward;
-        int MinSubSize, BestMinSubSize = 3, MinForward = 0;
-        GainType Cost1 = 0, Cost2 = 0, Gain, OldCost1, MinGain = 0;
-        Node *N, *NNext, *N1, *N2, *MinN1, *MinN2, *First = 0, *Last;
-
-        N = FirstNode;
-        do
-            N->Suc->Pred = N->Next->Prev = N;
-        while ((N = N->Suc) != FirstNode);
-        do {
-            Cost1 += N->Cost = C(N, N->Suc) - N->Pi - N->Suc->Pi;
-            if ((N->Suc == N->Prev || N->Suc == N->Next) &&
-                (N->Pred == N->Prev || N->Pred == N->Next))
-                N->V = 0;
-            else {
-                N->V = 1;
-                NewDimension++;
-                First = N;
-            }
-        } while ((N = N->Suc) != FirstNode);
-        if (NewDimension == 0)
-            return Cost1 / Precision;
-        do {
-            Cost2 += N->NextCost = N->Next == N->Pred ? N->Pred->Cost :
-                N->Next == N->Suc ? N->Cost :
-                C(N, N->Next) - N->Pi - N->Next->Pi;
-        } while ((N = N->Next) != FirstNode);
-        OldCost1 = Cost1;
-
-        /* Shrink the tours. 
-           OldPred and OldSuc represent the shrunken T1. 
-           Prev and Next represent the shrunken T2 */
-        N = First;
-        Last = 0;
-        do {
-            if (N->V) {
-                N->Rank = ++Rank;
-                if (Last) {
-                    (Last->OldSuc = N)->OldPred = Last;
-                    if (Last != N->Pred)
-                        Last->Cost = 0;
-                }
-                Last = N;
-            }
-        } while ((N = N->Suc) != First);
-        (Last->OldSuc = First)->OldPred = Last;
-        if (Last != First->Pred)
-            Last->Cost = 0;
-        N = First;
-        Last = 0;
-        do {
-            if (N->V) {
-                if (Last) {
-                    Last->Next = N;
-                    if (Last != N->Prev) {
-                        N->Prev = Last;
-                        Last->NextCost = 0;
-                    }
-                }
-                Last = N;
-            }
-        } while ((N = N->Next) != First);
-        Last->Next = First;
-        if (Last != First->Prev) {
-            First->Prev = Last;
-            Last->NextCost = 0;
-        }
-
-        /* Merge the shrunken tours */
-        do {
-            MinN1 = MinN2 = 0;
-            MinSubSize = NewDimension / 2;
-            N1 = First;
-            do {
-                while (N1->OldSuc != First &&
-                       (N1->OldSuc == N1->Next || N1->OldSuc == N1->Prev))
-                    N1 = N1->OldSuc;
-                if (N1->OldSuc == First &&
-                    (N1->OldSuc == N1->Next || N1->OldSuc == N1->Prev))
-                    break;
-                for (Forward = 1, N2 = N1->Next; Forward >= 0;
-                     Forward--, N2 = N1->Prev) {
-                    if (N2 == N1->OldSuc || N2 == N1->OldPred)
-                        continue;
-                    SubSize2 = MaxSubSize1 = 0;
-                    do {
-                        if (++SubSize2 >= MinSubSize)
-                            break;
-                        if ((SubSize1 = N2->Rank - N1->Rank) < 0)
-                            SubSize1 += NewDimension;
-                        if (SubSize1 >= MinSubSize)
-                            break;
-                        if (SubSize1 > MaxSubSize1) {
-                            if (SubSize1 == SubSize2) {
-                                for (N = N1, Gain = 0; N != N2; N = N->OldSuc)
-                                    Gain += N->Cost - N->NextCost;
-                                if (!Forward)
-                                    Gain += N1->NextCost - N2->NextCost;
-                                if (Gain != 0) {
-                                    MinSubSize = SubSize1;
-                                    MinN1 = N1;
-                                    MinN2 = N2;
-                                    MinGain = Gain;
-                                    MinForward = Forward;
-                                }
-                                break;
-                            }
-                            MaxSubSize1 = SubSize1;
-                        }
-                    } while ((N2 = Forward ? N2->Next : N2->Prev) != N1);
-                }
-            } while ((N1 = N1->OldSuc) != First &&
-                     MinSubSize != BestMinSubSize);
-            if (MinN1) {
-                BestMinSubSize = MinSubSize;
-                if (MinGain > 0) {
-                    Improved1 = 1;
-                    Cost1 -= MinGain;
-                    Rank = MinN1->Rank;
-                    for (N = MinN1; N != MinN2; N = NNext) {
-                        NNext = MinForward ? N->Next : N->Prev;
-                        (N->OldSuc = NNext)->OldPred = N;
-                        N->Rank = Rank;
-                        N->Cost = MinForward ? N->NextCost : NNext->NextCost;
-                        if (++Rank > NewDimension)
-                            Rank = 1;
-                    }
-                } else {
-                    Improved2 = 1;
-                    Cost2 += MinGain;
-                    for (N = MinN1; N != MinN2; N = N->OldSuc) {
-                        if (MinForward) {
-                            (N->Next = N->OldSuc)->Prev = N;
-                            N->NextCost = N->Cost;
-                        } else {
-                            (N->Prev = N->OldSuc)->Next = N;
-                            N->Prev->NextCost = N->Cost;
-                        }
-                    }
-                    if (MinForward)
-                        MinN2->Prev = N->OldPred;
-                    else {
-                        MinN2->Next = N->OldPred;
-                        MinN2->NextCost = N->OldPred->Cost;
-                    }
-                }
-                First = MinForward ? MinN2 : MinN1;
-            }
-        } while (MinN1);
-
-        if (Cost1 < Cost2 ? !Improved1 : Cost2 < Cost1 ? !Improved2 :
-            !Improved1 || !Improved2)
-            return OldCost1 / Precision;
-
-        /* Expand the best tour into a full tour */
-        N = FirstNode;
-        do
-            N->Mark = 0;
-        while ((N = N->Suc) != FirstNode);
-        N = First;
-        N->Mark = N;
-        do {
-            if (!N->Suc->Mark && (!N->V || !N->Suc->V))
-                N->OldSuc = N->Suc;
-            else if (!N->Pred->Mark && (!N->V || !N->Pred->V))
-                N->OldSuc = N->Pred;
-            else if (Cost1 <= Cost2) {
-                if (N->OldSuc->Mark)
-                    N->OldSuc = !N->OldPred->Mark ? N->OldPred : First;
-            } else if (!N->Next->Mark)
-                N->OldSuc = N->Next;
-            else if (!N->Prev->Mark)
-                N->OldSuc = N->Prev;
-            else
-                N->OldSuc = First;
-            N->Mark = N;
-        } while ((N = N->OldSuc) != First);
-        Hash = 0;
-        do {
-            N->OldSuc->Pred = N;
-            Hash ^= Rand[N->Id] * Rand[N->OldSuc->Id];
-        }
-        while ((N = N->Suc = N->OldSuc) != First);
-        return (Cost1 <= Cost2 ? Cost1 : Cost2) / Precision;
-    }
 
     /* Distance.c */
     int Distance(Node * Na, Node * Nb)
@@ -1129,21 +934,18 @@ struct LKH {
     /* IsPossibleCandidate.c */
     int IsPossibleCandidate(Node * From, Node * To)
     {
-        Node *Na, *Nb, *Nc, *N;
-
-        if (Forbidden(From, To))
-            return 0;
-        if (InInitialTour(From, To) ||
-            From->SubproblemSuc == To || To->SubproblemSuc == From ||
-            FixedOrCommon(From, To))
-            return 1;
-        if (From->FixedTo2 || To->FixedTo2)
-            return 0;
-        if (!IsCandidate(From, To) &&
-            (FixedOrCommonCandidates(From) == 2 ||
-             FixedOrCommonCandidates(To) == 2))
-            return 0;
-        // if (MergeTourFiles < 2)
+        // if (Forbidden(From, To))
+        //     return 0;
+        // if (InInitialTour(From, To) ||
+        //     From->SubproblemSuc == To || To->SubproblemSuc == From ||
+        //     FixedOrCommon(From, To))
+        //     return 1;
+        // if (From->FixedTo2 || To->FixedTo2)
+        //     return 0;
+        // if (!IsCandidate(From, To) &&
+        //     (FixedOrCommonCandidates(From) == 2 ||
+        //      FixedOrCommonCandidates(To) == 2))
+        //     return 0;
         return 1;
     }
 
@@ -1153,9 +955,9 @@ struct LKH {
         int Count;
         Candidate *NFrom;
 
-        if (From->Subproblem != FirstNode->Subproblem ||
-            To->Subproblem != FirstNode->Subproblem ||
-            Cost == INT_MAX)
+        // if (From->Subproblem != FirstNode->Subproblem ||
+        //     To->Subproblem != FirstNode->Subproblem ||
+        if (Cost == INT_MAX)
             return 0;
         if (From->CandidateSet == 0)
             From->CandidateSet = (Candidate *) calloc(3, sizeof(Candidate));
@@ -1214,31 +1016,10 @@ struct LKH {
         while ((Na = Nb) != FirstNode);
 
         /* Add INPUT_TOUR_FILE edges */
-        Na = FirstNode;
-        do {
-            Nb = Na->InputSuc;
-            if (!Nb)
-                break;
-            if (Na->Subproblem == Subproblem && Nb->Subproblem == Subproblem) {
-                d = D(Na, Nb);
-                AddCandidate(Na, Nb, d, 1);
-                AddCandidate(Nb, Na, d, 1);
-            }
-        }
-        while ((Na = Nb) != FirstNode);
+        // removed
 
         /* Add SUBPROBLEM_TOUR_FILE edges */
-        Na = FirstNode;
-        do {
-            Nb = Na->SubproblemSuc;
-            if (!Nb)
-                break;
-            if (Na->Subproblem == Subproblem && Nb->Subproblem == Subproblem) {
-                d = D(Na, Nb);
-                AddCandidate(Na, Nb, d, 1);
-                AddCandidate(Nb, Na, d, 1);
-            }
-        } while ((Na = Nb) != FirstNode);
+        // removed
     }
 
     /* ResetCandidateSet.c */
@@ -4056,7 +3837,7 @@ struct LKH {
     LKH(int __n, const vector<pll>& points) : Dimension(__n) {
         ProblemFileName = PiFileName = InputTourFileName =
             OutputTourFileName = TourFileName = 0;
-        CandidateFiles = MergeTourFiles = 0;
+        CandidateFiles = 0;
         AscentCandidates = 50;
         BackboneTrials = 0;
         Backtracking = 0;
@@ -4083,19 +3864,20 @@ struct LKH {
         Kicks = 1;
         KickType = 0;
         MaxBreadth = INT_MAX;
-        MaxCandidates = 5;
+        // MaxCandidates = 5;
+        MaxCandidates = 4;
         MaxPopulationSize = 0;
         MaxSwaps = -1;
         MaxTrials = -1;
         MoorePartitioning = 0;
         MoveType = 5;
         NonsequentialMoveType = -1;
-        // Optimum = MINUS_INFINITY;
-        // PatchingA = 1;
-        // PatchingC = 0;
-        Optimum = 12345;
-        PatchingA = 2;
-        PatchingC = 3;
+        Optimum = MINUS_INFINITY;
+        PatchingA = 1;
+        PatchingC = 0;
+        // Optimum = 12345;
+        // PatchingA = 2;
+        // PatchingC = 3;
         PatchingAExtended = 0;
         PatchingARestricted = 0;
         PatchingCExtended = 0;
@@ -4180,8 +3962,6 @@ struct LKH {
                     else
                         Link(Prev, N);
                     N->Id = i;
-                    // if (MergeTourFiles >= 1)
-                    //     N->MergeSuc = (Node **) calloc(MergeTourFiles, sizeof(Node *));
                 }
                 Link(N, FirstNode);
             }
@@ -4434,13 +4214,7 @@ struct LKH {
                 RecordBestTour();
             }
             OldOptimum = Optimum;
-            if (Cost < Optimum) {
-                if (FirstNode->InputSuc) {
-                    Node *N = FirstNode;
-                    while ((N = N->InputSuc = N->Suc) != FirstNode);
-                }
-                Optimum = Cost;
-            }
+            Optimum = min(Optimum, Cost);
             if (StopAtOptimum && Cost == OldOptimum && MaxPopulationSize >= 1) {
                 Runs = Run;
                 break;
