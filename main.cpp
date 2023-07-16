@@ -32,29 +32,14 @@ typedef struct HashTable {
     int Count; /* Number of occupied entries */
 } HashTable;
 
-void HashInitialize(HashTable * T)
-{
+void HashInitialize(HashTable * T) {
     int i;
-
     for (i = 0; i < HashTableSize; i++) {
         T->Entry[i].Hash = UINT_MAX;
         T->Entry[i].Cost = MINUS_INFINITY;
     }
     T->Count = 0;
 }
-
-/*
- * HashInsert(T,H,Cost) inserts H and Cost (the cost of the tour) in 
- * the table T in a location given by the hash value H. 
- *
- * Collisions are handled by double hashing.
- *
- * The table size is fixed. If the load factor becomes greater than 
- * a specified maximum, MaxLoadFactor, no more insertions will be
- * made. However, if the table entry given by H has a cost greater 
- * than or equal Cost, then Cost of this entry replaces its pervious 
- * value.      
- */
 
 void HashInsert(HashTable * T, unsigned Hash, GainType Cost)
 {
@@ -72,11 +57,6 @@ void HashInsert(HashTable * T, unsigned Hash, GainType Cost)
     T->Entry[i].Hash = Hash;
     T->Entry[i].Cost = Cost;
 }
-
-/*
- * HashSearch(T,H,Cost) returns 1 if table T has an entry containing 
- * Cost and H. Otherwise, the function returns 0.
- */
 
 int HashSearch(HashTable * T, unsigned Hash, GainType Cost)
 {
@@ -102,23 +82,11 @@ typedef int (*CostFunction) (Node * Na, Node * Nb);
 typedef GainType (*MergeTourFunction) (void);
 
 /* Genetic.h */
-// typedef void (*CrossoverFunction) ();
-
 int MaxPopulationSize; /* The maximum size of the population */ 
-// int PopulationSize;    /* The current size of the population */
-
-// CrossoverFunction Crossover;
-
-// int **Population;      /* Array of individuals (solution tours) */
-// GainType *Fitness;     /* The fitness (tour cost) of each individual */
 
 void AddToPopulation(GainType Cost);
 void ApplyCrossover(int i, int j);
-// void FreePopulation();
-// int HasFitness(GainType Cost);
-// int LinearSelection(int Size, double Bias);
 GainType MergeTourWithIndividual(int i);
-// void PrintPopulation();
 void ReplaceIndividualWithTour(int i, GainType Cost);
 int ReplacementIndividual(GainType Cost);
 
@@ -278,18 +246,6 @@ struct LKH {
     int *cycle;     /* Array: cycle[i] is cycle number of t[i] */
     GainType *G;    /* For storing the G-values in the BestKOptMove function */
     int K;          /* The value K for the current K-opt move */
-
-    // int FeasibleKOptMove(int k);
-    // void FindPermutation(int k);
-    // int Cycles(int k);
-
-    // int Added(const Node * ta, const Node * tb);
-    // int Deleted(const Node * ta, const Node * tb);
-
-    // void MarkAdded(Node *ta, Node *tb);
-    // void MarkDeleted(Node *ta, Node *tb);
-    // void UnmarkAdded(Node *ta, Node *tb);
-    // void UnmarkDeleted(Node *ta, Node *tb);
     
     int AscentCandidates;
     int BackboneTrials;     /* Number of backbone trials in each run */
@@ -442,23 +398,6 @@ struct LKH {
     // MoveFunction BestMove, BestSubsequentMove;
     MoveFunction BacktrackMove;
     // MergeTourFunction MergeWithTour;
-
-
-    /* eprintf.c */
-    void eprintf(const char *fmt, ...)
-    {
-        va_list args;
-
-        if (LastLine && *LastLine)
-            fprintf(stderr, "\n%s\n", LastLine);
-        fprintf(stderr, "\n*** Error ***\n");
-        va_start(args, fmt);
-        vfprintf(stderr, fmt, args);
-        va_end(args);
-        fprintf(stderr, "\n");
-        exit(EXIT_FAILURE);
-    }
-
     
     /* LKHmain.c */
     GainType Cost, OldOptimum;
@@ -651,9 +590,6 @@ struct LKH {
             Hash ^= Rand[N->Id] * Rand[N->OldSuc->Id];
         }
         while ((N = N->Suc = N->OldSuc) != First);
-        // if (TraceLevel >= 2)
-        // printff("IPT: " GainFormat "\n",
-        // (Cost1 <= Cost2 ? Cost1 : Cost2) / Precision);
         return (Cost1 <= Cost2 ? Cost1 : Cost2) / Precision;
     }
 
@@ -675,43 +611,19 @@ struct LKH {
         return (Na->Id <
                 Nb->Id ? Nb->C[Na->Id] : Na->C[Nb->Id]) + Na->Pi + Nb->Pi;
     }
-    
-    // int c(Node * Na, Node * Nb)
-    // {
-    //     if (Fixed(Na, Nb))
-    //         return Na->Pi + Nb->Pi;
-    //     int dx = (int) (fabs(Na->X - Nb->X) + 0.5),
-    //         dy = (int) (fabs(Na->Y - Nb->Y) + 0.5);
-    //     return (dx > dy ? dx : dy) * Precision + Na->Pi + Nb->Pi;
-    // }
 
     /* Heap.c */
-    int HeapCount;           /* Its current number of elements */
-    int HeapCapacity;        /* Its capacity */
+    int HeapCount;
+    int HeapCapacity;
 
-    /*      
-     * The MakeHeap function creates an empty heap. 
-     */
-
-    void HeapMake(int Size)
-    {
+    void HeapMake(int Size) {
         Heap = (Node **) malloc((Size + 1) * sizeof(Node *));
         HeapCapacity = Size;
         HeapCount = 0;
     }
-
-    /*
-     * The HeapSiftUp function is called when the rank of a node is decreased, 
-     * or when a node is inserted into the heap.
-     * The function moves the node forward in the heap (the foremost node
-     * of the heap has the lowest rank).
-     * When calling HeapSiftUp(N), node N must belong to the heap.              
-     */
-
-    void HeapSiftUp(Node * N)
-    {
+               
+    void HeapSiftUp(Node * N) {
         int Loc = N->Loc, Parent = Loc / 2;
-
         while (Parent && N->Rank < Heap[Parent]->Rank) {
             Heap[Loc] = Heap[Parent];
             Heap[Loc]->Loc = Loc;
@@ -722,17 +634,8 @@ struct LKH {
         N->Loc = Loc;
     }
 
-    /*
-     * The HeapSiftDown function is called by the Heapify and HeapDeleteMin 
-     * functions. The function moves the node backwards in the heap 
-     * (the foremost node of the heap has the lowest rank).
-     * When calling HeapSiftDown(N), node N must belong to the heap.              
-     */
-
-    void HeapSiftDown(Node * N)
-    {
+    void HeapSiftDown(Node * N) {
         int Loc = N->Loc, Child;
-
         while (Loc <= HeapCount / 2) {
             Child = 2 * Loc;
             if (Child < HeapCount && Heap[Child + 1]->Rank < Heap[Child]->Rank)
@@ -747,16 +650,8 @@ struct LKH {
         N->Loc = Loc;
     }
 
-    /*       
-     * The HeapDeleteMin function deletes the foremost node from the heap. 
-     * The function returns a pointer to the deleted node (0, if the heap
-     * is empty).
-     */
-
-    Node *HeapDeleteMin()
-    {
+    Node *HeapDeleteMin() {
         Node *Remove;
-
         if (!HeapCount)
             return 0;
         Remove = Heap[1];
@@ -767,23 +662,12 @@ struct LKH {
         return Remove;
     }
 
-    /*       
-     * The HeapInsert function inserts a node N into the heap.
-     * When calling HeapInsert(N), node N must not belong to the heap.
-     */
-
-    void HeapInsert(Node * N)
-    {
+    void HeapInsert(Node * N) {
         HeapLazyInsert(N);
         HeapSiftUp(N);
     }
 
-    /*
-     * The HeapDelete function deletes a node N from the heap.
-     */
-
-    void HeapDelete(Node * N)
-    {
+    void HeapDelete(Node * N) {
         int Loc = N->Loc;
         if (!Loc)
             return;
@@ -796,29 +680,100 @@ struct LKH {
         N->Loc = 0;
     }
 
-    /*       
-     * The HeapLazyInsert function inserts a node as the last node of the heap.
-     * This may destroy the heap condition, but it can later be restored by 
-     * calling the Heapify function.
-     * When calling HeapLazyInsert(N), node N must not belong to the heap.
-     */
-
-    void HeapLazyInsert(Node * N)
-    {
+    void HeapLazyInsert(Node * N) {
         assert(HeapCount < HeapCapacity);
         Heap[++HeapCount] = N;
         N->Loc = HeapCount;
     }
 
-    /*       
-     * The Heapify function constructs a heap from its nodes.
-     */
-
-    void Heapify()
-    {
+    void Heapify() {
         int Loc;
         for (Loc = HeapCount / 2; Loc >= 1; Loc--)
             HeapSiftDown(Heap[Loc]);
+    }
+    
+    /* Segment.h */
+#define PRED(a) (Reversed ? (a)->Suc : (a)->Pred)
+#define SUC(a) (Reversed ? (a)->Pred : (a)->Suc)
+#define BETWEEN(a, b, c) Between(a, b, c)
+#define FLIP(a, b, c, d) Flip(a, b, c)
+
+#define Swap1(a1,a2,a3)                         \
+    FLIP(a1,a2,a3,0)
+#define Swap2(a1,a2,a3, b1,b2,b3)               \
+    (Swap1(a1,a2,a3), Swap1(b1,b2,b3))
+#define Swap3(a1,a2,a3, b1,b2,b3, c1,c2,c3)             \
+    (Swap2(a1,a2,a3, b1,b2,b3), Swap1(c1,c2,c3))
+#define Swap4(a1,a2,a3, b1,b2,b3, c1,c2,c3, d1,d2,d3)           \
+    (Swap3(a1,a2,a3, b1,b2,b3, c1,c2,c3), Swap1(d1,d2,d3))
+#define Swap5(a1,a2,a3, b1,b2,b3, c1,c2,c3, d1,d2,d3, e1,e2,e3)         \
+    (Swap4(a1,a2,a3, b1,b2,b3, c1,c2,c3, d1,d2,d3), Swap1(e1,e2,e3))
+
+    /* Make3OptMove.c */
+    void
+    Make3OptMove(Node * t1, Node * t2, Node * t3, Node * t4,
+                 Node * t5, Node * t6, int Case)
+    {
+        switch (Case) {
+        case 1:
+        case 2:
+            Swap2(t1, t2, t3, t6, t5, t4);
+            return;
+        case 5:
+            Swap3(t1, t2, t4, t6, t5, t4, t6, t2, t3);
+            return;
+        case 6:
+            Swap2(t3, t4, t5, t1, t2, t3);
+            return;
+        default:
+            assert(0);
+            return;
+        }
+    }
+
+    /* Make4OptMove.c */
+    void
+    Make4OptMove(Node * t1, Node * t2, Node * t3, Node * t4,
+                 Node * t5, Node * t6, Node * t7, Node * t8, int Case)
+    {
+        if (SUC(t1) != t2)
+            Reversed ^= 1;
+        switch (Case) {
+        case 1:
+        case 2:
+            Swap3(t1, t2, t3, t6, t5, t4, t7, t8, t1);
+            return;
+        case 3:
+        case 4:
+            Swap3(t1, t2, t3, t8, t7, t6, t5, t8, t1);
+            return;
+        case 5:
+            if (!BETWEEN(t2, t7, t3))
+                Swap3(t5, t6, t7, t2, t1, t4, t1, t4, t5);
+            else if (BETWEEN(t2, t7, t6))
+                Swap3(t5, t6, t7, t5, t8, t3, t3, t8, t1);
+            else
+                Swap3(t1, t2, t7, t7, t2, t3, t4, t7, t6);
+            return;
+        case 6:
+            Swap3(t3, t4, t5, t6, t3, t2, t1, t6, t7);
+            return;
+        case 7:
+            Swap3(t6, t5, t8, t2, t1, t4, t8, t5, t4);
+            return;
+        case 11:
+            Swap3(t1, t2, t7, t3, t4, t5, t3, t6, t7);
+            return;
+        case 12:
+            Swap3(t3, t4, t5, t7, t8, t1, t3, t6, t7);
+            return;
+        case 15:
+            Swap3(t3, t4, t5, t3, t6, t7, t8, t3, t2);
+            return;
+        default:
+            assert(0);
+            return;
+        }
     }
 
     /* Flip.c */
@@ -879,456 +834,23 @@ struct LKH {
             (Rand[t2->Id] * Rand[t3->Id]) ^ (Rand[t4->Id] * Rand[t1->Id]);
     }
 
-    
-    /* Segment.h */
-#define PRED(a) (Reversed == (a)->Parent->Reversed ? (a)->Pred : (a)->Suc)
-#define SUC(a) (Reversed == (a)->Parent->Reversed ? (a)->Suc : (a)->Pred)
-#define BETWEEN(a, b, c) Between_SL(a, b, c)
-#define FLIP(a, b, c, d) Flip_SL(a, b, c)
-
-#define Swap1(a1,a2,a3)                         \
-    FLIP(a1,a2,a3,0)
-#define Swap2(a1,a2,a3, b1,b2,b3)               \
-    (Swap1(a1,a2,a3), Swap1(b1,b2,b3))
-#define Swap3(a1,a2,a3, b1,b2,b3, c1,c2,c3)             \
-    (Swap2(a1,a2,a3, b1,b2,b3), Swap1(c1,c2,c3))
-#define Swap4(a1,a2,a3, b1,b2,b3, c1,c2,c3, d1,d2,d3)           \
-    (Swap3(a1,a2,a3, b1,b2,b3, c1,c2,c3), Swap1(d1,d2,d3))
-#define Swap5(a1,a2,a3, b1,b2,b3, c1,c2,c3, d1,d2,d3, e1,e2,e3)         \
-    (Swap4(a1,a2,a3, b1,b2,b3, c1,c2,c3, d1,d2,d3), Swap1(e1,e2,e3))
-
-    /* Make3OptMove.c */
-    void
-    Make3OptMove(Node * t1, Node * t2, Node * t3, Node * t4,
-                 Node * t5, Node * t6, int Case)
+    /* Between.c */
+    int Between(const Node * ta, const Node * tb, const Node * tc)
     {
-        switch (Case) {
-        case 1:
-        case 2:
-            Swap2(t1, t2, t3, t6, t5, t4);
-            return;
-        case 5:
-            Swap3(t1, t2, t4, t6, t5, t4, t6, t2, t3);
-            return;
-        case 6:
-            Swap2(t3, t4, t5, t1, t2, t3);
-            return;
-        default:
-            eprintf("Make3OptMove: Internal error");
-        }
-    }
+        int a, b = tb->Rank, c;
 
-    /* Make4OptMove.c */
-    void
-    Make4OptMove(Node * t1, Node * t2, Node * t3, Node * t4,
-                 Node * t5, Node * t6, Node * t7, Node * t8, int Case)
-    {
-        if (SUC(t1) != t2)
-            Reversed ^= 1;
-        switch (Case) {
-        case 1:
-        case 2:
-            Swap3(t1, t2, t3, t6, t5, t4, t7, t8, t1);
-            return;
-        case 3:
-        case 4:
-            Swap3(t1, t2, t3, t8, t7, t6, t5, t8, t1);
-            return;
-        case 5:
-            if (!BETWEEN(t2, t7, t3))
-                Swap3(t5, t6, t7, t2, t1, t4, t1, t4, t5);
-            else if (BETWEEN(t2, t7, t6))
-                Swap3(t5, t6, t7, t5, t8, t3, t3, t8, t1);
-            else
-                Swap3(t1, t2, t7, t7, t2, t3, t4, t7, t6);
-            return;
-        case 6:
-            Swap3(t3, t4, t5, t6, t3, t2, t1, t6, t7);
-            return;
-        case 7:
-            Swap3(t6, t5, t8, t2, t1, t4, t8, t5, t4);
-            return;
-        case 11:
-            Swap3(t1, t2, t7, t3, t4, t5, t3, t6, t7);
-            return;
-        case 12:
-            Swap3(t3, t4, t5, t7, t8, t1, t3, t6, t7);
-            return;
-        case 15:
-            Swap3(t3, t4, t5, t3, t6, t7, t8, t3, t2);
-            return;
-        default:
-            eprintf("Make4OptMove: Internal error");
-        }
-    }
-
-    /* Flip_SL.c */
-#define SPLIT_CUTOFF 0.75
-
-    void Flip_SL(Node * t1, Node * t2, Node * t3)
-    {
-        Node *t4, *a, *b, *c, *d;
-        Segment *P1, *P2, *P3, *P4, *Q1, *Q2;
-        Node *s1, *s2;
-        int i, Temp;
-
-        assert(t1->Pred == t2 || t1->Suc == t2);
-        if (t3 == t2->Pred || t3 == t2->Suc)
-            return;
-        if (Groups == 1) {
-            Flip(t1, t2, t3);
-            return;
-        }
-        t4 = t2 == SUC(t1) ? PRED(t3) : SUC(t3);
-        P1 = t1->Parent;
-        P2 = t2->Parent;
-        P3 = t3->Parent;
-        P4 = t4->Parent;
-        /* Split segments if needed */
-        if (P1 != P3 && P2 != P4) {
-            if (P1 == P2) {
-                SplitSegment(t1, t2);
-                P1 = t1->Parent;
-                P2 = t2->Parent;
-            }
-            if (P3 == P4 && P1 != P3 && P2 != P4) {
-                SplitSegment(t3, t4);
-                P3 = t3->Parent;
-                P4 = t4->Parent;
-            }
-        } else if ((P1 == P3
-                    && abs(t3->Rank - t1->Rank) > SPLIT_CUTOFF * GroupSize)
-                   || (P2 == P4
-                       && abs(t4->Rank - t2->Rank) > SPLIT_CUTOFF * GroupSize)) {
-            if (P1 == P2) {
-                SplitSegment(t1, t2);
-                P1 = t1->Parent;
-                P2 = t2->Parent;
-                P3 = t3->Parent;
-                P4 = t4->Parent;
-            }
-            if (P3 == P4) {
-                SplitSegment(t3, t4);
-                P1 = t1->Parent;
-                P2 = t2->Parent;
-                P3 = t3->Parent;
-                P4 = t4->Parent;
-            }
-        }
-        /* Check if it is possible to flip locally within a segment */
-        b = 0;
-        if (P1 == P3) {
-            /* Either the t1 --> t3 path or the t2 --> t4 path lies 
-               within one segment */
-            if (t1->Rank < t3->Rank) {
-                if (P1 == P2 && P1 == P4 && t2->Rank > t1->Rank) {
-                    a = t1;
-                    b = t2;
-                    c = t3;
-                    d = t4;
-                } else {
-                    a = t2;
-                    b = t1;
-                    c = t4;
-                    d = t3;
-                }
-            } else {
-                if (P1 == P2 && P1 == P4 && t2->Rank < t1->Rank) {
-                    a = t3;
-                    b = t4;
-                    c = t1;
-                    d = t2;
-                } else {
-                    a = t4;
-                    b = t3;
-                    c = t2;
-                    d = t1;
-                }
-            }
-        } else if (P2 == P4) {
-            /* The t2 --> t4 path lies within one segment */
-            if (t4->Rank < t2->Rank) {
-                a = t3;
-                b = t4;
-                c = t1;
-                d = t2;
-            } else {
-                a = t1;
-                b = t2;
-                c = t3;
-                d = t4;
-            }
-        }
-        if (b) {
-            int Cbc = C(b, c), Cda = C(d, a);
-            /* Flip locally (b --> d) within a segment */
-            i = d->Rank;
-            d->Suc = 0;
-            s2 = b;
-            while ((s1 = s2)) {
-                s2 = s1->Suc;
-                s1->Suc = s1->Pred;
-                s1->Pred = s2;
-                s1->Rank = i--;
-                Temp = s1->SucCost;
-                s1->SucCost = s1->PredCost;
-                s1->PredCost = Temp;
-            }
-            d->Pred = a;
-            b->Suc = c;
-            d->PredCost = Cda;
-            b->SucCost = Cbc;
-            if (a->Suc == b) {
-                a->Suc = d;
-                a->SucCost = d->PredCost;
-            } else {
-                a->Pred = d;
-                a->PredCost = d->PredCost;
-            }
-            if (c->Pred == d) {
-                c->Pred = b;
-                c->PredCost = b->SucCost;
-            } else {
-                c->Suc = b;
-                c->SucCost = b->SucCost;
-            }
-            if (b->Parent->First == b)
-                b->Parent->First = d;
-            else if (d->Parent->First == d)
-                d->Parent->First = b;
-            if (b->Parent->Last == b)
-                b->Parent->Last = d;
-            else if (d->Parent->Last == d)
-                d->Parent->Last = b;
+        if (!Reversed) {
+            a = ta->Rank;
+            c = tc->Rank;
         } else {
-            int Ct2t3, Ct4t1;
-            /* Reverse a sequence of segments */
-            if (P1->Suc != P2) {
-                a = t1;
-                t1 = t2;
-                t2 = a;
-                a = t3;
-                t3 = t4;
-                t4 = a;
-                Q1 = P1;
-                P1 = P2;
-                P2 = Q1;
-                Q1 = P3;
-                P3 = P4;
-                P4 = Q1;
-            }
-            /* Find the sequence with the smallest number of segments */
-            if ((i = P2->Rank - P3->Rank) < 0)
-                i += Groups;
-            if (2 * i > Groups) {
-                a = t3;
-                t3 = t2;
-                t2 = a;
-                a = t1;
-                t1 = t4;
-                t4 = a;
-                Q1 = P3;
-                P3 = P2;
-                P2 = Q1;
-                Q1 = P1;
-                P1 = P4;
-                P4 = Q1;
-            }
-            Ct2t3 = C(t2, t3);
-            Ct4t1 = C(t4, t1);
-            /* Reverse the sequence of segments (P3 --> P1). 
-               Mirrors the corresponding code in the Flip function */
-            i = P1->Rank;
-            P1->Suc = 0;
-            Q2 = P3;
-            while ((Q1 = Q2)) {
-                Q2 = Q1->Suc;
-                Q1->Suc = Q1->Pred;
-                Q1->Pred = Q2;
-                Q1->Rank = i--;
-                Q1->Reversed ^= 1;
-            }
-            P3->Suc = P2;
-            P2->Pred = P3;
-            P1->Pred = P4;
-            P4->Suc = P1;
-            if (t3->Suc == t4) {
-                t3->Suc = t2;
-                t3->SucCost = Ct2t3;
-            } else {
-                t3->Pred = t2;
-                t3->PredCost = Ct2t3;
-            }
-            if (t2->Suc == t1) {
-                t2->Suc = t3;
-                t2->SucCost = Ct2t3;
-            } else {
-                t2->Pred = t3;
-                t2->PredCost = Ct2t3;
-            }
-            if (t1->Pred == t2) {
-                t1->Pred = t4;
-                t1->PredCost = Ct4t1;
-            } else {
-                t1->Suc = t4;
-                t1->SucCost = Ct4t1;
-            }
-            if (t4->Pred == t3) {
-                t4->Pred = t1;
-                t4->PredCost = Ct4t1;
-            } else {
-                t4->Suc = t1;
-                t4->SucCost = Ct4t1;
-            }
+            a = tc->Rank;
+            c = ta->Rank;
         }
-        SwapStack[Swaps].t1 = t1;
-        SwapStack[Swaps].t2 = t2;
-        SwapStack[Swaps].t3 = t3;
-        SwapStack[Swaps].t4 = t4;
-        Swaps++;
-        Hash ^= (Rand[t1->Id] * Rand[t2->Id]) ^
-            (Rand[t3->Id] * Rand[t4->Id]) ^
-            (Rand[t2->Id] * Rand[t3->Id]) ^ (Rand[t4->Id] * Rand[t1->Id]);
+        return a <= c ? b >= a && b <= c : b >= a || b <= c;
     }
-
-    /*
-      The SplitSegment function is called by the Flip_SL function to split 
-      a segment. Calling SplitSegment(t1,t2), where t1 and t2 are neighbors 
-      in the same segment, causes the segment to be split between t1 and t2. 
-      The smaller half is merged with its neighbouring segment, thus keeping 
-      the number of segments fixed.
-
-      The implementation of SplitSegment closely follows the suggestions given in
-
-      M. L. Fredman, D. S. Johnson & L. A. McGeoch,
-      Data Structures for Traveling Salesmen",
-      J. Algorithms, 16, 432-479 (1995).
-    */
-
-    void SplitSegment(Node * t1, Node * t2)
-    {
-        Segment *P = t1->Parent, *Q;
-        Node *t, *u;
-        int i, Temp, Count;
-
-        if (t2->Rank < t1->Rank) {
-            t = t1;
-            t1 = t2;
-            t2 = t;
-        }
-        Count = t1->Rank - P->First->Rank + 1;
-        if (2 * Count < P->Size) {
-            /* The left part of P is merged with its neighbouring segment, Q */
-            Q = P->Reversed ? P->Suc : P->Pred;
-            t = P->First->Pred;
-            i = t->Rank;
-            if (t == Q->Last) {
-                if (t == Q->First && t->Suc != P->First) {
-                    u = t->Suc;
-                    t->Suc = t->Pred;
-                    t->Pred = u;
-                    Q->Reversed ^= 1;
-                    Temp = t->SucCost;
-                    t->SucCost = t->PredCost;
-                    t->PredCost = Temp;
-                }
-                for (t = P->First; t != t2; t = t->Suc) {
-                    t->Parent = Q;
-                    t->Rank = ++i;
-                }
-                Q->Last = t1;
-            } else {
-                for (t = P->First; t != t2; t = u) {
-                    t->Parent = Q;
-                    t->Rank = --i;
-                    u = t->Suc;
-                    t->Suc = t->Pred;
-                    t->Pred = u;
-                    Temp = t->SucCost;
-                    t->SucCost = t->PredCost;
-                    t->PredCost = Temp;
-                }
-                Q->First = t1;
-            }
-            P->First = t2;
-        } else {
-            /* The right part of P is merged with its neighbouring segment, Q */
-            Q = P->Reversed ? P->Pred : P->Suc;
-            t = P->Last->Suc;
-            i = t->Rank;
-            if (t == Q->First) {
-                if (t == Q->Last && t->Pred != P->Last) {
-                    u = t->Suc;
-                    t->Suc = t->Pred;
-                    t->Pred = u;
-                    Q->Reversed ^= 1;
-                    Temp = t->SucCost;
-                    t->SucCost = t->PredCost;
-                    t->PredCost = Temp;
-                }
-                for (t = P->Last; t != t1; t = t->Pred) {
-                    t->Parent = Q;
-                    t->Rank = --i;
-                }
-                Q->First = t2;
-            } else {
-                for (t = P->Last; t != t1; t = u) {
-                    t->Parent = Q;
-                    t->Rank = ++i;
-                    u = t->Pred;
-                    t->Pred = t->Suc;
-                    t->Suc = u;
-                    Temp = t->SucCost;
-                    t->SucCost = t->PredCost;
-                    t->PredCost = Temp;
-                }
-                Q->Last = t2;
-            }
-            Count = P->Size - Count;
-            P->Last = t1;
-        }
-        P->Size -= Count;
-        Q->Size += Count;
-    }
-
-    /* Between_SL.c */
-    int Between_SL(const Node * ta, const Node * tb, const Node * tc)
-    {
-        const Segment *Pa, *Pb, *Pc;
-
-        if (tb == ta || tb == tc)
-            return 1;
-        if (ta == tc)
-            return 0;
-        Pa = ta->Parent;
-        Pb = tb->Parent;
-        Pc = tc->Parent;
-        if (Pa == Pc) {
-            if (Pb == Pa)
-                return (Reversed == Pa->Reversed) ==
-                    (ta->Rank < tc->Rank ?
-                     tb->Rank > ta->Rank && tb->Rank < tc->Rank :
-                     tb->Rank > ta->Rank || tb->Rank < tc->Rank);
-            return (Reversed == Pa->Reversed) == (ta->Rank > tc->Rank);
-        }
-        if (Pb == Pc)
-            return (Reversed == Pb->Reversed) == (tb->Rank < tc->Rank);
-        if (Pa == Pb)
-            return (Reversed == Pa->Reversed) == (ta->Rank < tb->Rank);
-        return Reversed !=
-            (Pa->Rank < Pc->Rank ?
-             Pb->Rank > Pa->Rank && Pb->Rank < Pc->Rank :
-             Pb->Rank > Pa->Rank || Pb->Rank < Pc->Rank);
-    }
-
 
     /* Sequence.c */
     Node *tp1;
-
-    // static int compare2(const void *pa, const void *pb)
-    // {
-    //         // return BETWEEN(tp1, t[*(int *) pa], t[*(int *) pb]) ? -1 : 1;
-    // }
 
     void FindPermutation(int k)
     {
@@ -1578,38 +1100,19 @@ struct LKH {
     /* Forbidden.c */
     int Forbidden(const Node * ta, const Node * tb)
     {
-        return ProblemType == ATSP &&
-            (ta->Id <= DimensionSaved) == (tb->Id <= DimensionSaved);
+        return 0;
     }
 
     /* IsCommonEdge.c */
     int IsCommonEdge(const Node * ta, const Node * tb)
     {
-        int i;
-
-        if (MergeTourFiles < 2)
-            return 0;
-        for (i = 0; i < MergeTourFiles; i++)
-            if (ta->MergeSuc[i] != tb && tb->MergeSuc[i] != ta)
-                return 0;
-        return 1;
+        return 0;
     }
 
     /* FixedOrCommonCandidates.c */
     int FixedOrCommonCandidates(Node * N)
     {
-        int Count = 0;
-
-        Count = N->FixedTo2 ? 2 : N->FixedTo1 ? 1 : 0;
-        if (MergeTourFiles >= 2) {
-            if (!Fixed(N, N->MergeSuc[0]) && IsCommonEdge(N, N->MergeSuc[0]))
-                Count++;
-            if (!Fixed(N->MergePred, N) && IsCommonEdge(N->MergePred, N))
-                Count++;
-        }
-        if (Count > 2)
-            eprintf("Node %d has more than two required candidate edges",
-                    N->Id);
+        int Count = N->FixedTo2 ? 2 : N->FixedTo1 ? 1 : 0;
         return Count;
     }
 
@@ -1617,7 +1120,6 @@ struct LKH {
     int IsCandidate(const Node * ta, const Node * tb)
     {
         Candidate *Nta;
-
         for (Nta = ta->CandidateSet; Nta && Nta->To; Nta++)
             if (Nta->To == tb)
                 return 1;
@@ -1641,39 +1143,7 @@ struct LKH {
             (FixedOrCommonCandidates(From) == 2 ||
              FixedOrCommonCandidates(To) == 2))
             return 0;
-        if (MergeTourFiles < 2)
-            return 1;
-        if (!From->Head) {
-            Na = FirstNode;
-            do
-                Na->Head = Na->Tail = Na;
-            while ((Na = Na->Suc) != FirstNode);
-            while ((Nb = Na->MergeSuc[0]) != FirstNode
-                   && FixedOrCommon(Na, Nb))
-                Na = Nb;
-            if (Nb != FirstNode) {
-                N = Nb;
-                do {
-                    Nc = Nb;
-                    do {
-                        Na = Nb;
-                        Na->Head = Nc;
-                        Nb = Na->MergeSuc[0];
-                    } while (FixedOrCommon(Na, Nb));
-                    do
-                        Nc->Tail = Na;
-                    while (Nc != N && (Nc = Nc->MergeSuc[0]) != Nb);
-                } while (Nc != N);
-            } else {
-                do
-                    Nb->Head = Nb->Tail = FirstNode;
-                while ((Nb = Nb->Suc) != FirstNode);
-            }
-        }
-        if (From->Head == To->Head ||
-            (From->Head != From && From->Tail != From) ||
-            (To->Head != To && To->Tail != To))
-            return 0;
+        // if (MergeTourFiles < 2)
         return 1;
     }
 
@@ -1727,21 +1197,7 @@ struct LKH {
         while ((Na = Na->Suc) != FirstNode);
 
         /* Add MERGE_TOUR_FILE edges */
-        for (i = 0; i < MergeTourFiles; i++) {
-            Na = FirstNode;
-            do {
-                Nb = Na->MergeSuc[i];
-                if (!Nb)
-                    break;
-                if (Na->Subproblem == Subproblem &&
-                    Nb->Subproblem == Subproblem) {
-                    d = D(Na, Nb);
-                    AddCandidate(Na, Nb, d, 1);
-                    AddCandidate(Nb, Na, d, 1);
-                }
-            }
-            while ((Na = Nb) != FirstNode);
-        }
+        // removed
 
         /* Add INITIAL_TOUR_FILE edges */
         Na = FirstNode;
@@ -1904,34 +1360,8 @@ struct LKH {
     /* SegmentSize.c */
     int SegmentSize(Node * ta, Node * tb)
     {
-        Segment *Pa, *Pb;
-        int nLeft, nMid, nRight;
-
-        Pa = ta->Parent;
-        Pb = tb->Parent;
-        if (Pa == Pb) {
-            int n = Reversed == Pa->Reversed ? tb->Rank - ta->Rank :
-                ta->Rank - tb->Rank;
-            return (n < 0 ? n + Dimension : n) + 1;
-        }
-        nLeft =
-            Reversed ==
-            Pa->Reversed ? Pa->Last->Rank - ta->Rank : ta->Rank -
-            Pa->First->Rank;
-        if (nLeft < 0)
-            nLeft += Pa->Size;
-        nMid = !Reversed ? Pb->Rank - Pa->Rank : Pa->Rank - Pb->Rank;
-        if (nMid < 0)
-            nMid += Groups;
-        nMid = nMid == 2 ? (!Reversed ? Pa->Suc : Pa->Pred)->Size
-            : (nMid - 1) * GroupSize;
-        nRight =
-            Reversed ==
-            Pb->Reversed ? tb->Rank -
-            Pb->First->Rank : Pb->Last->Rank - tb->Rank;
-        if (nRight < 0)
-            nRight += Pb->Size;
-        return nLeft + nMid + nRight + 2;
+        int n = !Reversed ? tb->Rank - ta->Rank : ta->Rank - tb->Rank;
+        return (n < 0 ? n + Dimension : n) + 1;
     }
 
     /* Create_POPMUSIC_CandidateSet.c */
@@ -1957,20 +1387,15 @@ struct LKH {
         Node *N;
         double startTime, entryTime;
 
-        // entryTime = GetTime();
-        // if (TraceLevel >= 2)
-        //     printff("Creating POPMUSIC candidate set ...\n");
         AddTourCandidates();
-        if (MaxCandidates == 0) {
-            N = FirstNode;
-            do {
-                if (!N->CandidateSet)
-                    eprintf("MAX_CANDIDATES = 0: No candidates");
-            } while ((N = N->Suc) != FirstNode);
-            // if (TraceLevel >= 2)
-            //     printff("done\n");
-            return;
-        }
+        // if (MaxCandidates == 0) {
+        //     N = FirstNode;
+        //     // do {
+        //     //     if (!N->CandidateSet)
+        //     //         eprintf("MAX_CANDIDATES = 0: No candidates");
+        //     // } while ((N = N->Suc) != FirstNode);
+        //     return;
+        // }
 
         n = Dimension;
         solution = (int *) malloc((n + 1) * sizeof(int));
@@ -1987,30 +1412,14 @@ struct LKH {
             shuffle(n, solution);
             solution[n] = solution[0];
             node[n] = node[solution[0]];
-            // startTime = GetTime();
             build_path(n, solution, SAMPLE_SIZE);
             solution[n] = solution[0];
             node[n] = node[solution[0]];
             cost = length_path(n, solution);
-            // if (TraceLevel >= 2) {
-            //     printff("%d: Initial cost:  %lld, ", no_res, cost);
-            //     if (Optimum != MINUS_INFINITY && Optimum != 0)
-            //         printff("Gap = %0.2f%%, ",
-            //                 100.0 * (cost - Optimum) / Optimum);
-            //     printff("Time: %0.2f sec.\n", GetTime() - startTime);
-            // }
-            // startTime = GetTime();
             fast_POPMUSIC(n, solution, SAMPLE_SIZE * SAMPLE_SIZE);
             solution[n] = solution[0];
             node[n] = node[solution[0]];
             cost = length_path(n, solution);
-            // if (TraceLevel >= 2) {
-            //     printff("%d: Improved cost: %lld, ", no_res, cost);
-            //     if (Optimum != MINUS_INFINITY && Optimum != 0)
-            //         printff("Gap = %0.2f%%, ",
-            //                 100.0 * (cost - Optimum) / Optimum);
-            //     printff("Time: %0.2f sec.\n", GetTime() - startTime);
-            // }
             costSum += cost;
             if (cost > costMax)
                 costMax = cost;
@@ -2029,19 +1438,6 @@ struct LKH {
                     a->InitialSuc = b;
             }
         }
-        /*
-          if (TraceLevel >= 2) {
-          printff
-          ("Cost.min = " GainFormat ", Cost.avg = %0.2f, Cost.max = "
-          GainFormat "\n", costMin, (double) costSum / NB_RES, costMax);
-          if (Optimum != MINUS_INFINITY && Optimum != 0)
-          printff
-          ("Gap.min = %0.2f%%, Gap.avg = %0.2f%%, Gap.max = %0.2f%%\n",
-          100.0 * (costMin - Optimum) / Optimum,
-          100.0 * ((double) costSum / NB_RES - Optimum) / Optimum,
-          100.0 * (costMax - Optimum) / Optimum);
-          }
-        */
         free(solution);
         free(node);
         free(node_path);
@@ -2051,11 +1447,6 @@ struct LKH {
         AddTourCandidates();
         if (CandidateSetSymmetric)
             SymmetrizeCandidateSet();
-        // if (TraceLevel >= 2) {
-        //     CandidateReport();
-        //     printff("POPMUSIC Time = %0.2f sec.\n", GetTime() - entryTime);
-        //     printff("done\n");
-        // }
     }
 
     /************************ Compute the length of a path ************************/
@@ -3369,21 +2760,17 @@ struct LKH {
     }
 
     /* FreeStructures.c */
-#define Free(s) { free(s); s = 0; }
     void FreeCandidateSets()
     {
         Node *N = FirstNode;
         if (!N)
             return;
         do {
-            // Free(N->CandidateSet);
             N->CandidateSet = 0;
-            // Free(N->BackboneCandidateSet);
             N->BackboneCandidateSet = 0;
         }
         while ((N = N->Suc) != FirstNode);
     }
-
 
     /* GenerateCandidates.c */
     void GenerateCandidates(int MaxCandidates, GainType MaxAlpha,
@@ -3393,8 +2780,6 @@ struct LKH {
         Candidate *NFrom, *NN;
         int a, d, Count;
 
-        // if (TraceLevel >= 2)
-        //     printff("Generating candidates ... ");
         if (MaxAlpha < 0 || MaxAlpha > INT_MAX)
             MaxAlpha = INT_MAX;
         /* Initialize CandidateSet for each node */
@@ -3414,10 +2799,10 @@ struct LKH {
             while ((From = From->Suc) != FirstNode);
         } else {
             AddTourCandidates();
-            do {
-                if (!From->CandidateSet)
-                    eprintf("MAX_CANDIDATES = 0: No candidates");
-            } while ((From = From->Suc) != FirstNode);
+            // do {
+            //     if (!From->CandidateSet)
+            //         eprintf("MAX_CANDIDATES = 0: No candidates");
+            // } while ((From = From->Suc) != FirstNode);
             return;
         }
 
@@ -3505,11 +2890,7 @@ struct LKH {
         AddTourCandidates();
         if (Symmetric)
             SymmetrizeCandidateSet();
-        // if (TraceLevel >= 2)
-        //     printff("done\n");
     }
-
-
 
     /* Ascent.c */
     GainType Ascent()
@@ -3524,16 +2905,6 @@ struct LKH {
         do
             t->Pi = t->BestPi = 0;
         while ((t = t->Suc) != FirstNode);
-        // if (CandidateSetType == DELAUNAY && !FirstNode->CandidateSet)
-        //     CreateDelaunayCandidateSet();
-        // else if (CandidateSetType == POPMUSIC && !FirstNode->CandidateSet)
-        //     Create_POPMUSIC_CandidateSet(AscentCandidates);
-        // else if (MaxCandidates == 0) {
-        //     AddTourCandidates();
-        //     if (ExtraCandidates > 0)
-        //         AddExtraCandidates(ExtraCandidates, ExtraCandidateSetType,
-        //                            ExtraCandidateSetSymmetric);
-        // }
 
         /* Compute the cost of a minimum 1-tree */
         W = Minimum1TreeCost(CandidateSetType == DELAUNAY ||
@@ -3555,22 +2926,8 @@ struct LKH {
             if (Optimum != MINUS_INFINITY
                 && (Alpha = Optimum * Precision - W) >= 0)
                 MaxAlpha = Alpha;
-            // if (CandidateSetType != DELAUNAY && CandidateSetType != POPMUSIC)
             GenerateCandidates(AscentCandidates, MaxAlpha, 1);
-            // else {
-            //     OrderCandidateSet(AscentCandidates, MaxAlpha, 1);
-            //     W = Minimum1TreeCost(1);
-            //     if (!Norm || W / Precision == Optimum)
-            //         return W;
-            // }
         }
-        // if (ExtraCandidates > 0)
-        //     AddExtraCandidates(ExtraCandidates, ExtraCandidateSetType,
-        //                        ExtraCandidateSetSymmetric);
-        // if (TraceLevel >= 2) {
-        //     CandidateReport();
-        //     printff("Subgradient optimization ...\n");
-        // }
 
         /* Set LastV of every node to V (the node's degree in the 1-tree) */
         t = FirstNode;
@@ -3586,10 +2943,6 @@ struct LKH {
         for (Period = InitialPeriod, T = InitialStepSize * Precision;
              Period > 0 && T > 0 && Norm != 0; Period /= 2, T /= 2) {
             /* Period and step size are halved at each iteration */
-            // if (TraceLevel >= 2)
-            //     printff
-            //         ("  T = %d, Period = %d, BestW = %0.1f, BestNorm = %d\n",
-            //          T, Period, (double) BestW / Precision, BestNorm);
             for (P = 1; T && P <= Period && Norm != 0; P++) {
                 /* Adjust the Pi-values */
                 t = FirstNode;
@@ -3619,8 +2972,6 @@ struct LKH {
                         if (W < W0) {
                             /* Double the number of candidate edges 
                                and start all over again */
-                            // if (TraceLevel >= 2)
-                            //     printff("Warning: AscentCandidates doubled\n");
                             if ((AscentCandidates *= 2) > Dimension)
                                 AscentCandidates = Dimension;
                             goto Start;
@@ -3634,12 +2985,6 @@ struct LKH {
                     do
                         t->BestPi = t->Pi;
                     while ((t = t->Suc) != FirstNode);
-                    // if (TraceLevel >= 2)
-                    //     printff
-                    //         ("* T = %d, Period = %d, P = %d, "
-                    //          "BestW = %0.1f, BestNorm = %d\n",
-                    //          T, Period, P, (double) BestW / Precision,
-                    //          BestNorm);
                     /* If in the initial phase, the step size is doubled */
                     if (InitialPhase && T * sqrt((double) Norm) > 0)
                         T *= 2;
@@ -3650,10 +2995,6 @@ struct LKH {
                         P == Period && (Period *= 2) > InitialPeriod)
                         Period = InitialPeriod;
                 } else {
-                    // if (TraceLevel >= 3)
-                    //     printff
-                    //         ("  T = %d, Period = %d, P = %d, W = %0.1f, Norm = %d\n",
-                    //          T, Period, P, (double) W / Precision, Norm);
                     if (InitialPhase && P > Period / 2) {
                         /* Conclude the initial phase */
                         InitialPhase = 0;
@@ -3677,8 +3018,6 @@ struct LKH {
 
         if (MaxCandidates > 0 && CandidateSetType != POPMUSIC) {
             FreeCandidateSets();
-            // if (CandidateSetType == DELAUNAY)
-            //     CreateDelaunayCandidateSet();
         } else {
             Candidate *Nt;
             t = FirstNode;
@@ -3688,9 +3027,6 @@ struct LKH {
             }
             while ((t = t->Suc) != FirstNode);
         }
-        // if (TraceLevel >= 2)
-        //     printff("Ascent: BestW = %0.1f, Norm = %d\n",
-        //             (double) BestW / Precision, Norm);
         return W;
     }
 
@@ -3734,13 +3070,6 @@ struct LKH {
         free(s);
     }
 
-    /*
-     * The RandomNode function returns a random node N, for
-     * which the edge (N, N->Suc) is neither a fixed edge nor
-     * a common edge of tours to be merged, and N has not 
-     * previously been chosen.
-     */
-
     Node *RandomNode()
     {
         Node *N;
@@ -3771,22 +3100,6 @@ struct LKH {
             do
                 BetterTour[i++] = N->Id;
             while ((N = N->Suc) != Stop);
-        } else {
-            if (Stop->Id > DimensionSaved)
-                Stop = N = Stop->Suc;
-            if (N->Suc->Id != DimensionSaved + N->Id) {
-                int i = 1;
-                do
-                    if (N->Id <= DimensionSaved)
-                        BetterTour[i++] = N->Id;
-                while ((N = N->Suc) != Stop);
-            } else {
-                int i = DimensionSaved;
-                do
-                    if (N->Id <= DimensionSaved)
-                        BetterTour[i--] = N->Id;
-                while ((N = N->Suc) != Stop);
-            }
         }
         BetterTour[0] = BetterTour[DimensionSaved];
         N = FirstNode;
@@ -3800,9 +3113,7 @@ struct LKH {
     /* RecordBestTour.c */
     void RecordBestTour()
     {
-        int i;
-
-        for (i = 0; i <= DimensionSaved; i++)
+        for (int i = 0; i <= DimensionSaved; i++)
             BestTour[i] = BetterTour[i];
     }
 
@@ -3845,24 +3156,6 @@ struct LKH {
             for (i = 1; i <= Kicks; i++)
                 KSwapKick(KickType);
             return;
-        }
-        if (Trial == 1 && (!FirstNode->InitialSuc || InitialTourFraction < 1)) {
-            // if (InitialTourAlgorithm == BORUVKA ||
-            //     InitialTourAlgorithm == GREEDY ||
-            //     InitialTourAlgorithm == MOORE ||
-            //     InitialTourAlgorithm == NEAREST_NEIGHBOR ||
-            //     InitialTourAlgorithm == QUICK_BORUVKA ||
-            //     InitialTourAlgorithm == SIERPINSKI) {
-            //     GainType Cost = InitialTourAlgorithm == MOORE ||
-            //         InitialTourAlgorithm == SIERPINSKI ?
-            //         SFCTour(InitialTourAlgorithm) : GreedyTour();
-            //     // if (MaxTrials == 0) {
-            //     //     BetterCost = Cost;
-            //     //     RecordBetterTour();
-            //     // }
-            //     if (!FirstNode->InitialSuc)
-            //         return;
-            // }
         }
 
     Start:
@@ -3907,15 +3200,9 @@ struct LKH {
                     FirstAlternative = NextN;
                 }
             }
-            if (Alternatives == 0 && MergeTourFiles > 1) {
-                for (NN = N->CandidateSet; NN && (NextN = NN->To); NN++) {
-                    if (!NextN->V && IsCommonEdge(N, NextN)) {
-                        Alternatives++;
-                        NextN->Next = FirstAlternative;
-                        FirstAlternative = NextN;
-                    }
-                }
-            }
+
+            // removed, mergetourfiles
+
             if (Alternatives == 0 && FirstNode->InitialSuc && Trial == 1 &&
                 Count <= InitialTourFraction * Dimension) {
                 /* Case B */
@@ -4269,7 +3556,6 @@ struct LKH {
         for (X2 = 1; X2 <= 2; X2++) {
             Reversed = X2 == 1 ? OldReversed : (OldReversed ^= 1);
             do {
-                // print(s1, FirstNode->Id);
                 s2 = SUC(s1);
                 if (FixedOrCommon(s1, s2))
                     continue;
@@ -4468,7 +3754,6 @@ struct LKH {
         return 0;
     }
 
-
     /* LinKernighan.c */
     GainType LinKernighan()
     {
@@ -4478,7 +3763,6 @@ struct LKH {
         Candidate *Nt1;
         Segment *S;
         SSegment *SS;
-        // double EntryTime = GetTime();
 
         Reversed = 0;
         S = FirstSegment;
@@ -4546,32 +3830,13 @@ struct LKH {
         if (S->Size < GroupSize)
             SS->Size++;
         Cost /= Precision;
-        // if (TraceLevel >= 3 || (TraceLevel == 2 && Cost < BetterCost)) {
-        //     printff("Cost = " GainFormat, Cost);
-        //     if (Optimum != MINUS_INFINITY && Optimum != 0)
-        //         printff(", Gap = %0.4f%%", 100.0 * (Cost - Optimum) / Optimum);
-        //     printff(", Time = %0.2f sec.  %s\n", fabs(GetTime() - EntryTime),
-        //             Cost < Optimum ? "<" : Cost == Optimum ? "=" : "");
-        // }
         PredSucCostAvailable = 1;
 
         /* Loop as long as improvements are found */
         do {
             /* Choose t1 as the first "active" node */
             while ((t1 = RemoveFirstActive())) {
-                // if (GetTime() - EntryTime >= TimeLimit ||
-                //     GetTime() - StartTime >= TotalTimeLimit) {
-                //     if (TraceLevel >= 1)
-                //         printff("*** Time limit exceeded");
-                //     goto End_LinKernighan;
-                // }
-                /* t1 is now "passive" */
                 SUCt1 = SUC(t1);
-                // if ((TraceLevel >= 3 || (TraceLevel == 2 && Trial == 1)) &&
-                //     ++it % (Dimension >= 100000 ? 10000 :
-                //             Dimension >= 10000 ? 1000 : 100) == 0)
-                //     printff("#%d: Time = %0.2f sec.\n",
-                //             it, fabs(GetTime() - EntryTime));
                 /* Choose t2 as one of t1's two neighbors on the tour */
                 for (X2 = 1; X2 <= 2; X2++) {
                     t2 = X2 == 1 ? PRED(t1) : SUCt1;
@@ -4590,23 +3855,8 @@ struct LKH {
                     while (t2);
                     if (Gain > 0) {
                         /* An improvement has been found */
-#ifdef HAVE_LONG_LONG
                         assert(Gain % Precision == 0);
-#else
-                        assert(fmod(Gain, Precision) == 0);
-#endif
                         Cost -= Gain / Precision;
-                        // if (TraceLevel >= 3 ||
-                        //     (TraceLevel == 2 && Cost < BetterCost)) {
-                        //     printff("Cost = " GainFormat, Cost);
-                        //     if (Optimum != MINUS_INFINITY && Optimum != 0)
-                        //         printff(", Gap = %0.4f%%",
-                        //                 100.0 * (Cost - Optimum) / Optimum);
-                        //     printff(", Time = %0.2f sec. %s\n",
-                        //             fabs(GetTime() - EntryTime),
-                        //             Cost < Optimum ? "<" : Cost ==
-                        //             Optimum ? "=" : "");
-                        // }
                         StoreTour();
                         if (HashSearch(HTable, Hash, Cost))
                             goto End_LinKernighan;
@@ -4626,22 +3876,9 @@ struct LKH {
             Gain = 0;
             if (Gain23Used && (Gain = Gain23()) > 0) {
                 /* An improvement has been found */
-#ifdef HAVE_LONG_LONG
                 assert(Gain % Precision == 0);
-#else
-                assert(fmod(Gain, Precision) == 0);
-#endif
                 Cost -= Gain / Precision;
                 StoreTour();
-                // if (TraceLevel >= 3 || (TraceLevel == 2 && Cost < BetterCost)) {
-                //     printff("Cost = " GainFormat, Cost);
-                //     if (Optimum != MINUS_INFINITY && Optimum != 0)
-                //         printff(", Gap = %0.4f%%",
-                //                 100.0 * (Cost - Optimum) / Optimum);
-                //     printff(", Time = %0.2f sec. + %s\n",
-                //             fabs(GetTime() - EntryTime),
-                //             Cost < Optimum ? "<" : Cost == Optimum ? "=" : "");
-                // }
                 if (HashSearch(HTable, Hash, Cost))
                     goto End_LinKernighan;
             }
@@ -4758,7 +3995,6 @@ struct LKH {
         GainType Cost;
         Node *t;
         int i;
-        // double EntryTime = GetTime();
 
         t = FirstNode;
         do
@@ -4782,13 +4018,6 @@ struct LKH {
         // }
 
         for (Trial = 1; Trial <= MaxTrials; Trial++) {
-            // if (GetTime() - EntryTime >= TimeLimit ||
-            //     GetTime() - StartTime >= TotalTimeLimit) {
-            //     if (TraceLevel >= 1)
-            //         printff("*** Time limit exceeded ***\n");
-            //     Trial--;
-            //     break;
-            // }
             /* Choose FirstNode at random */
             if (Dimension == DimensionSaved)
                 FirstNode = &NodeSet[1 + Random() % Dimension];
@@ -4797,68 +4026,15 @@ struct LKH {
                     FirstNode = FirstNode->Suc;
             ChooseInitialTour();
             Cost = LinKernighan();
-            // if (GetTime() - EntryTime < TimeLimit &&
-            //     GetTime() - StartTime < TotalTimeLimit) {
-            //     if (FirstNode->BestSuc) {
-            //         /* Merge tour with current best tour */
-            //         t = FirstNode;
-            //         while ((t = t->Next = t->BestSuc) != FirstNode);
-            //         Cost = MergeWithTour();
-            //     }
-            //     if (Dimension == DimensionSaved && Cost >= OrdinalTourCost &&
-            //         BetterCost > OrdinalTourCost) {
-            //         /* Merge tour with ordinal tour */
-            //         for (i = 1; i < Dimension; i++)
-            //             NodeSet[i].Next = &NodeSet[i + 1];
-            //         NodeSet[Dimension].Next = &NodeSet[1];
-            //         Cost = MergeWithTour();
-            //     }
-            // }
             if (Cost < BetterCost) {
-                // if (TraceLevel >= 1) {
-                //     printff("* %d: Cost = " GainFormat, Trial, Cost);
-                //     if (Optimum != MINUS_INFINITY && Optimum != 0)
-                //         printff(", Gap = %0.4f%%",
-                //                 100.0 * (Cost - Optimum) / Optimum);
-                //     printff(", Time = %0.2f sec. %s\n",
-                //             fabs(GetTime() - EntryTime),
-                //             Cost < Optimum ? "<" : Cost == Optimum ? "=" : "");
-                // }
                 BetterCost = Cost;
                 RecordBetterTour();
-                // if (BetterCost < BestCost && SubproblemSize == 0)
-                //     WriteTour(OutputTourFileName, BetterTour, BetterCost);
                 if (StopAtOptimum && BetterCost == Optimum)
                     break;
                 AdjustCandidateSet();
                 HashInitialize(HTable);
                 HashInsert(HTable, Hash, Cost);
-            } // else if (TraceLevel >= 2)
-            //   printff("  %d: Cost = " GainFormat ", Time = %0.2f sec.\n",
-            //           Trial, Cost, fabs(GetTime() - EntryTime));
-            /* Record backbones if wanted */
-            if (Trial <= BackboneTrials && BackboneTrials < MaxTrials) {
-                SwapCandidateSets();
-                AdjustCandidateSet();
-                if (Trial == BackboneTrials) {
-                    // if (TraceLevel >= 1) {
-                    //     printff("# %d: Backbone candidates ->\n", Trial);
-                    //     CandidateReport();
-                    // }
-                } else
-                    SwapCandidateSets();
             }
-        }
-        if (BackboneTrials > 0 && BackboneTrials < MaxTrials) {
-            if (Trial > BackboneTrials ||
-                (Trial == BackboneTrials &&
-                 (!StopAtOptimum || BetterCost != Optimum)))
-                SwapCandidateSets();
-            t = FirstNode;
-            do {
-                free(t->BackboneCandidateSet);
-                t->BackboneCandidateSet = 0;
-            } while ((t = t->Suc) != FirstNode);
         }
         t = FirstNode;
         if (Norm == 0 || MaxTrials == 0) {
@@ -4877,11 +4053,7 @@ struct LKH {
         return BetterCost;
     }
 
-
-    
     LKH(int __n, const vector<pll>& points) : Dimension(__n) {
-        // print(0);
-        
         ProblemFileName = PiFileName = InputTourFileName =
             OutputTourFileName = TourFileName = 0;
         CandidateFiles = MergeTourFiles = 0;
@@ -4952,110 +4124,28 @@ struct LKH {
         TotalTimeLimit = DBL_MAX;
         TraceLevel = 1;
 
-        /* something */
-        // StartTime = LastTime = GetTime();
         MaxMatrixDimension = 20000;
-        // MergeWithTour = MergeWithTourIPT;
-        // Recombination == GPX2 ? MergeWithTourGPX2 :
-        // Recombination == CLARIST ? MergeWithTourCLARIST :
-        // MergeWithTourIPT;
 
         /* ReadProblem() */
 
-        /* FreeStructures() */
-        // #define Free(s) { free(s); s = 0; }
-    
-        //         {
-        //             Node *N = FirstNode;
-        //             if (N) {
-        //             do {
-        //                 print(1);
-        //                 // print(10);
-        //                 N->CandidateSet = 0;
-        //                 // Free(N->CandidateSet);
-        //                 // print(20);
-        //                 N->BackboneCandidateSet = 0;
-        //                 // Free(N->BackboneCandidateSet);
-        //             }
-        //             while ((N = N->Suc) != FirstNode);
-        //             }
-        //             print(2);
-        //         }
-        //         {
-        //             if (FirstSegment) {
-        //                 Segment *S = FirstSegment, *SPrev;
-        //                 do {
-        //                     SPrev = S->Pred;
-        //                     Free(S);
-        //                 }
-        //                 while ((S = SPrev) != FirstSegment);
-        //                 FirstSegment = 0;
-        //             }
-        //             if (FirstSSegment) {
-        //                 SSegment *SS = FirstSSegment, *SSPrev;
-        //                 do {
-        //                     SSPrev = SS->Pred;
-        //                     Free(SS);
-        //                 }
-        //                 while ((SS = SSPrev) != FirstSSegment);
-        //                 FirstSSegment = 0;
-        //             }
-        //         }
-        //         {    if (NodeSet) {
-        //                 int i;
-        //                 for (i = 1; i <= Dimension; i++) {
-        //                     Node *N = &NodeSet[i];
-        //                     Free(N->MergeSuc);
-        //                     N->C = 0;
-        //                 }
-        //                 Free(NodeSet);
-        //             }
-        // Free(CostMatrix);
         CostMatrix = 0;
-        // Free(BestTour);
         BestTour = 0;
-        // Free(BetterTour);
         BetterTour = 0;
-        // Free(SwapStack);
         SwapStack = 0;
-        // Free(HTable);
         HTable = 0;
-        // Free(Rand);
         Rand = 0;
-        // Free(CacheSig);
         CacheSig = 0;
-        // Free(CacheVal);
         CacheVal = 0;
-        // Free(Name);
         Name = 0;
-        // Free(Type);
-        // Free(EdgeWeightType);
-        // Free(EdgeWeightFormat);
-        // Free(EdgeDataFormat);
-        // Free(NodeCoordType);
-        // Free(DisplayDataType);
-        // Free(Heap);
         Heap = 0;
-        // Free(t);
         t = 0;
-        // Free(T);
         T = 0;
-        // Free(tSaved);
         tSaved = 0;
-        // Free(p);
         p = 0;
-        // Free(q);
         q = 0;
-        // Free(incl);
         incl = 0;
-        // Free(cycle);
         cycle = 0;
-        // Free(G);
         G = 0;
-        // FreePopulation();
-        //         }
-
-        // print(100);
 
         FirstNode = 0;
         WeightType = WeightFormat = ProblemType = -1;
@@ -5090,8 +4180,8 @@ struct LKH {
                     else
                         Link(Prev, N);
                     N->Id = i;
-                    if (MergeTourFiles >= 1)
-                        N->MergeSuc = (Node **) calloc(MergeTourFiles, sizeof(Node *));
+                    // if (MergeTourFiles >= 1)
+                    //     N->MergeSuc = (Node **) calloc(MergeTourFiles, sizeof(Node *));
                 }
                 Link(N, FirstNode);
             }
@@ -5112,10 +4202,8 @@ struct LKH {
                     break;
             while ((N = N->Suc) != FirstNode);
         }
-
-        // print(200);
-
         Swaps = 0;
+
         /* Adjust parameters */
         if (Seed == 0)
             Seed = (unsigned) time(0);
@@ -5155,9 +4243,7 @@ struct LKH {
             POPMUSIC_MaxNeighbors = Dimension - 1;
         if (POPMUSIC_SampleSize > Dimension)
             POPMUSIC_SampleSize = Dimension;
-        // if (CostMatrix == 0 && Dimension <= MaxMatrixDimension &&
-        // Distance != 0 && Distance != Distance_1 && Distance != Distance_LARGE &&
-        // Distance != Distance_ATSP && Distance != Distance_SPECIAL) {
+
         {
             Node *Ni, *Nj;
             CostMatrix = (int *) calloc((size_t) Dimension * (Dimension - 1) / 2,
@@ -5181,9 +4267,9 @@ struct LKH {
             int j, n = ProblemType == ATSP ? Dimension / 2 : Dimension;
             for (int i = 2; i <= n; i++) {
                 Node *N = &NodeSet[i];
-                for (j = 1; j < i; j++)
-                    if (N->C[j] * Precision / Precision != N->C[j])
-                        eprintf("PRECISION (= %d) is too large", Precision);
+                // for (j = 1; j < i; j++)
+                //     if (N->C[j] * Precision / Precision != N->C[j])
+                //         eprintf("PRECISION (= %d) is too large", Precision);
             }
         }
         // C = WeightType == EXPLICIT ? C_EXPLICIT : C_FUNCTION;
@@ -5202,52 +4288,11 @@ struct LKH {
         if (PatchingC >= 1) {
             // We copy this body
             // BestMove = BestSubsequentMove = BestKOptMove;
-            // if (!SubsequentPatching && SubsequentMoveType <= 5) {
-            //     MoveFunction BestOptMove[] =
-            //         { 0, 0, Best2OptMove, Best3OptMove,
-            //         Best4OptMove, Best5OptMove
-            //     };
-            //     BestSubsequentMove = BestOptMove[SubsequentMoveType];
-            // }
-        }//  else {
-        //     MoveFunction BestOptMove[] = { 0, 0, Best2OptMove, Best3OptMove,
-        //         Best4OptMove, Best5OptMove
-        //     };
-        //     BestMove = MoveType <= 5 ? BestOptMove[MoveType] : BestKOptMove;
-        //     BestSubsequentMove = SubsequentMoveType <= 5 ?
-        //         BestOptMove[SubsequentMoveType] : BestKOptMove;
-        // }
-        // if (ProblemType == HCP || ProblemType == HPP)
-        // MaxCandidates = 0;
-        // if (TraceLevel >= 1) {
-        //     printff("done\n");
-        //     PrintParameters();
-        // } else
-        //     printff("PROBLEM_FILE = %s\n",
-        //             ProblemFileName ? ProblemFileName : "");
-        // }
-
-        // print(300);
+        }
         
         /* AllocateStructures() */
-
         {
             int i, K;
-
-            // Free(Heap);
-            // Free(BestTour);
-            // Free(BetterTour);
-            // Free(HTable);
-            // Free(Rand);
-            // Free(CacheSig);
-            // Free(CacheVal);
-            // Free(T);
-            // Free(G);
-            // Free(t);
-            // Free(p);
-            // Free(q);
-            // Free(SwapStack);
-            // Free(tSaved);
 
             HeapMake(Dimension);
             BestTour = (int *) calloc(1 + Dimension, sizeof(int));
@@ -5266,37 +4311,16 @@ struct LKH {
                 CacheVal = (int *) calloc(i, sizeof(int));
                 CacheMask = i - 1;
             }
+
             // AllocateSegments();
             {
                 Segment *S = 0, *SPrev;
                 SSegment *SS = 0, *SSPrev;
                 int i;
-
-                // FreeSegments();
-                // {
-                //     if (FirstSegment) {
-                //         Segment *S = FirstSegment, *SPrev;
-                //         do {
-                //             SPrev = S->Pred;
-                //             Free(S);
-                //         }
-                //         while ((S = SPrev) != FirstSegment);
-                //         FirstSegment = 0;
-                //     }
-                //     if (FirstSSegment) {
-                //         SSegment *SS = FirstSSegment, *SSPrev;
-                //         do {
-                //             SSPrev = SS->Pred;
-                //             Free(SS);
-                //         }
-                //         while ((SS = SSPrev) != FirstSSegment);
-                //         FirstSSegment = 0;
-                //     }
-                // }
+                
                 FirstSegment = 0;
                 FirstSSegment = 0;
-                
-                GroupSize = (int) sqrt((double) Dimension);
+                GroupSize = Dimension;
                 Groups = 0;
                 for (i = Dimension, SPrev = 0; i > 0; i -= GroupSize, SPrev = S) {
                     S = (Segment *) malloc(sizeof(Segment));
@@ -5335,14 +4359,11 @@ struct LKH {
                 (SwapRecord *) malloc((MaxSwaps + 6 * K) * sizeof(SwapRecord));
         }
 
-        // print(400);
-
         /* CreateCandidateSet() */
         {
             GainType Cost, MaxAlpha, A;
             Node *Na;
             int CandidatesRead = 0, i;
-            // double EntryTime = GetTime();
 
             Norm = 9999;
             // if (C == C_EXPLICIT) {
@@ -5354,140 +4375,44 @@ struct LKH {
                 }
                 while ((Na = Na->Suc) != FirstNode);
             }
-            // if (Distance == Distance_1 ||
-            //     (MaxTrials == 0 &&
-            //      (FirstNode->InitialSuc || InitialTourAlgorithm == SIERPINSKI ||
-            //       InitialTourAlgorithm == MOORE))) {
-            //     CandidatesRead = ReadCandidates(MaxCandidates) |
-            //         ReadEdges(MaxCandidates);
-            //     AddTourCandidates();
-            //     if (ProblemType == HCP || ProblemType == HPP)
-            //         Ascent();
-            //     goto End_CreateCandidateSet;
-            // }
-            // if (TraceLevel >= 2)
-            //     printff("Creating candidates ...\n");
-            // if (MaxCandidates > 0 &&
-            //     (CandidateSetType == QUADRANT || CandidateSetType == NN)) {
-            //     ReadPenalties();
-            //     if (!(CandidatesRead = ReadCandidates(MaxCandidates) |
-            //           ReadEdges(MaxCandidates)) && MaxCandidates > 0) {
-            //         if (CandidateSetType == QUADRANT)
-            //             CreateQuadrantCandidateSet(MaxCandidates);
-            //         else if (CandidateSetType == NN) {
-            //             if ((CoordType == TWOD_COORDS
-            //                  && Distance != Distance_TOR_2D)
-            //                 || (CoordType == THREED_COORDS
-            //                     && Distance != Distance_TOR_3D))
-            //                 CreateNearestNeighborCandidateSet(MaxCandidates);
-            //             else
-            //                 CreateNNCandidateSet(MaxCandidates);
-            //         }
-            //     }
-            //     AddTourCandidates();
-            //     if (CandidateSetSymmetric)
-            //         SymmetrizeCandidateSet();
-            //     goto End_CreateCandidateSet;
-            // }
+
             // if (!ReadPenalties()) {
             {
-                /* No PiFile specified or available */
                 Na = FirstNode;
                 do
                     Na->Pi = 0;
                 while ((Na = Na->Suc) != FirstNode);
-                // CandidatesRead = ReadCandidates(MaxCandidates) | ReadEdges(MaxCandidates);
                 CandidatesRead = 0;
                 Cost = Ascent();
                 if (Subgradient && SubproblemSize == 0) {
-                    // WritePenalties();
                     PiFile = 0;
                 }
-            }//  else if ((CandidatesRead = ReadCandidates(MaxCandidates) |
-            //             ReadEdges(MaxCandidates)) || MaxCandidates == 0) {
-            //     AddTourCandidates();
-            //     if (CandidateSetSymmetric)
-            //         SymmetrizeCandidateSet();
-            //     goto End_CreateCandidateSet;
-            // } else {
-            //     if (CandidateSetType != DELAUNAY &&
-            //         CandidateSetType != POPMUSIC &&
-            //         MaxCandidates > 0) {
-            //         if (TraceLevel >= 2)
-            //             printff("Computing lower bound ... ");
-            //         Cost = Minimum1TreeCost(0);
-            //         if (TraceLevel >= 2)
-            //             printff("done\n");
-            //     } else {
-            //         if (CandidateSetType == DELAUNAY)
-            //             CreateDelaunayCandidateSet();
-            //         else
-            //             Create_POPMUSIC_CandidateSet(AscentCandidates);
-            //         Na = FirstNode;
-            //         do {
-            //             Na->BestPi = Na->Pi;
-            //             Na->Pi = 0;
-            //         }
-            //         while ((Na = Na->Suc) != FirstNode);
-            //         if (TraceLevel >= 2)
-            //             printff("Computing lower bound ... ");
-            //         Cost = Minimum1TreeCost(1);
-            //         if (TraceLevel >= 2)
-            //             printff("done\n");
-            //         Na = FirstNode;
-            //         do {
-            //             Na->Pi = Na->BestPi;
-            //             Cost -= 2 * Na->Pi;
-            //         }
-            //         while ((Na = Na->Suc) != FirstNode);
-            //     }
-            // }
+            }
+            
             LowerBound = (double) Cost / Precision;
-            // if (TraceLevel >= 1) {
-            //     printff("Lower bound = %0.1f", LowerBound);
-            //     if (Optimum != MINUS_INFINITY && Optimum != 0)
-            //         printff(", Gap = %0.2f%%",
-            //                 100.0 * (Optimum - LowerBound) / Optimum);
-            //     if (!PiFile)
-            //         printff(", Ascent time = %0.2f sec.",
-            //                 fabs(GetTime() - EntryTime));
-            //     printff("\n");
-            // }
+
             MaxAlpha = (GainType) fabs(Excess * Cost);
             if ((A = Optimum * Precision - Cost) > 0 && A < MaxAlpha)
                 MaxAlpha = A;
-            // if (CandidateSetType == DELAUNAY ||
-            //     CandidateSetType == POPMUSIC ||
-            //     MaxCandidates == 0)
-            //     OrderCandidateSet(MaxCandidates, MaxAlpha, CandidateSetSymmetric);
-            // else
             GenerateCandidates(MaxCandidates, MaxAlpha, CandidateSetSymmetric);
 
         End_CreateCandidateSet:
-            // if (ExtraCandidates > 0) {
-            //     AddExtraCandidates(ExtraCandidates,
-            //                        ExtraCandidateSetType,
-            //                        ExtraCandidateSetSymmetric);
-            //     AddTourCandidates();
-            // }
             ResetCandidateSet();
             if (MaxTrials > 0 ||
                 (InitialTourAlgorithm != SIERPINSKI &&
                  InitialTourAlgorithm != MOORE)) {
                 Na = FirstNode;
                 do {
-                    if (!Na->CandidateSet || !Na->CandidateSet[0].To) {
-                        if (MaxCandidates == 0)
-                            eprintf
-                                ("MAX_CANDIDATES = 0: Node %d has no candidates",
-                                 Na->Id);
-                        else
-                            eprintf("Node %d has no candidates", Na->Id);
-                    }
+                    // if (!Na->CandidateSet || !Na->CandidateSet[0].To) {
+                    //     if (MaxCandidates == 0)
+                    //         eprintf
+                    //             ("MAX_CANDIDATES = 0: Node %d has no candidates",
+                    //              Na->Id);
+                    //     else
+                    //         eprintf("Node %d has no candidates", Na->Id);
+                    // }
                 }
                 while ((Na = Na->Suc) != FirstNode);
-                // if (!CandidatesRead && SubproblemSize == 0)
-                //     WriteCandidates();
             }
             // if (C == C_EXPLICIT) {
             {
@@ -5497,61 +4422,16 @@ struct LKH {
                         Na->C[i] += Na->Pi + NodeSet[i].Pi;
                 while ((Na = Na->Suc) != FirstNode);
             }
-            // if (TraceLevel >= 1) {
-            //     CandidateReport();
-            //     printff("Preprocessing time = %0.2f sec.\n",
-            //             fabs(GetTime() - EntryTime));
-            // }
         }
-
-        // print(500);
         
         BestCost = PLUS_INFINITY;
 
         for (Run = 1; Run <= Runs; Run++) {
-            // LastTime = GetTime();
-            // if (LastTime - StartTime >= TotalTimeLimit) {
-            //     if (TraceLevel >= 1)
-            //         printff("*** Time limit exceeded ***\n");
-            //     Run--;
-            //     break;
-            // }
-            Cost = FindTour();      /* using the Lin-Kernighan heuristic */
-            // if (MaxPopulationSize > 1) {
-            //     /* Genetic algorithm */
-            //     int i;
-            //     for (i = 0; i < PopulationSize; i++) {
-            //         GainType OldCost = Cost;
-            //         Cost = MergeTourWithIndividual(i);
-            //         if (TraceLevel >= 1 && Cost < OldCost) {
-            //             printff("  Merged with %d: Cost = " GainFormat, i + 1,
-            //                     Cost);
-            //             if (Optimum != MINUS_INFINITY && Optimum != 0)
-            //                 printff(", Gap = %0.4f%%",
-            //                         100.0 * (Cost - Optimum) / Optimum);
-            //             printff("\n");
-            //         }
-            //     }
-            //     if (!HasFitness(Cost)) {
-            //         if (PopulationSize < MaxPopulationSize) {
-            //             AddToPopulation(Cost);
-            //             if (TraceLevel >= 1)
-            //                 PrintPopulation();
-            //         } else if (Cost < Fitness[PopulationSize - 1]) {
-            //             i = ReplacementIndividual(Cost);
-            //             ReplaceIndividualWithTour(i, Cost);
-            //             if (TraceLevel >= 1)
-            //                 PrintPopulation();
-            //         }
-            //     }
-            // } else if (Run > 1)
-            //     Cost = MergeTourWithBestTour();
+            Cost = FindTour(); // LKH heuristic
             if (Cost < BestCost) {
                 BestCost = Cost;
                 RecordBetterTour();
                 RecordBestTour();
-                // WriteTour(OutputTourFileName, BestTour, BestCost);
-                // WriteTour(TourFileName, BestTour, BestCost);
             }
             OldOptimum = Optimum;
             if (Cost < Optimum) {
@@ -5560,47 +4440,13 @@ struct LKH {
                     while ((N = N->InputSuc = N->Suc) != FirstNode);
                 }
                 Optimum = Cost;
-                // printff("*** New optimum = " GainFormat " ***\n", Optimum);
             }
-            // Time = fabs(GetTime() - LastTime);
-            // UpdateStatistics(Cost, Time);
-            // if (TraceLevel >= 1 && Cost != PLUS_INFINITY) {
-            //     printff("Run %d: Cost = " GainFormat, Run, Cost);
-            //     if (Optimum != MINUS_INFINITY && Optimum != 0)
-            //         printff(", Gap = %0.4f%%",
-            //                 100.0 * (Cost - Optimum) / Optimum);
-            //     printff(", Time = %0.2f sec. %s\n\n", Time,
-            //             Cost < Optimum ? "<" : Cost == Optimum ? "=" : "");
-            // }
             if (StopAtOptimum && Cost == OldOptimum && MaxPopulationSize >= 1) {
                 Runs = Run;
                 break;
             }
-            // if (PopulationSize >= 2 &&
-            //     (PopulationSize == MaxPopulationSize ||
-            //      Run >= 2 * MaxPopulationSize) && Run < Runs) {
-            //     Node *N;
-            //     int Parent1, Parent2;
-            //     Parent1 = LinearSelection(PopulationSize, 1.25);
-            //     do
-            //         Parent2 = LinearSelection(PopulationSize, 1.25);
-            //     while (Parent2 == Parent1);
-            //     ApplyCrossover(Parent1, Parent2);
-            //     N = FirstNode;
-            //     do {
-            //         if (ProblemType != HCP && ProblemType != HPP) {
-            //             int d = C(N, N->Suc);
-            //             AddCandidate(N, N->Suc, d, INT_MAX);
-            //             AddCandidate(N->Suc, N, d, INT_MAX);
-            //         }
-            //         N = N->InitialSuc = N->Suc;
-            //     }
-            //     while (N != FirstNode);
-            // }
             SRandom(++Seed);
         }
-
-        // print(600);
     }
 
     pair<double, vector<int>> return_result() {
@@ -5611,140 +4457,6 @@ struct LKH {
         return { BestCost, ret };
     }
 };
-
-// Function to calculate the Euclidean distance between two points
-// double distance(const pll& p1, const pll& p2) {
-//     ll dx = p1.first - p2.first;
-//     ll dy = p1.second - p2.second;
-//     return sqrt(dx * dx + dy * dy);
-// }
-
-// double tourLength(const vector<pll>& points, const vector<int>& tour) {
-//     double ret = 0;
-//     int n = points.size();
-//     for (int i=0; i<n; ++i) {
-//         ret += distance(points[tour[i]], points[tour[(i+1) % n]]);
-//     }
-//     return ret;
-// }
-
-// Function to perform the 3-opt algorithm
-// pair<double, vector<int>> threeOpt(const vector<pll>& points) {
-//     int n = points.size();
-
-//     // Initialize the tour to a simple sequential order
-//     vector<int> tour(n);
-//     for (int i = 0; i < n; ++i) {
-//         tour[i] = i;
-//     }
-        
-//     // Shuffle the vector randomly
-//     random_device rd;
-//     mt19937 g(rd());
-//     shuffle(tour.begin(), tour.end(), g);
-
-//     // Main loop of the algorithm
-//     while (true) {
-//         bool improvement = false;
-
-//         // Try all possible 3-opt exchanges
-//         for (int i = 0; i < n - 2; ++i) {
-//             for (int j = i + 2; j < n - 1; ++j) {
-//                 for (int k = j + 2; k < n - 1 + (i > 0); ++k) {
-//                     const auto& a = points[tour[i]];
-//                     const auto& b = points[tour[i+1]];
-//                     const auto& c = points[tour[j]];
-//                     const auto& d = points[tour[j+1]];
-//                     const auto& e = points[tour[k]];
-//                     const auto& f = points[tour[(k+1) % n]];
-                    
-//                     // Calculate the change in tour length
-//                     double originalLength = 0.0;
-//                     originalLength += distance(a, b);
-//                     originalLength += distance(c, d);
-//                     originalLength += distance(e, f);
-
-//                     double c1 = 0.0; // A'BC
-//                     c1 += distance(a, c);
-//                     c1 += distance(b, d);
-//                     c1 += distance(e, f);
-                    
-
-//                     double c2 = 0.0; // AB'C
-//                     c2 += distance(a, b);
-//                     c2 += distance(c, e);
-//                     c2 += distance(d, f);
-                    
-
-//                     double c3 = 0.0; // ABC'
-//                     c3 += distance(a, e);
-//                     c3 += distance(b, f);
-//                     c3 += distance(c, d);
-                    
-
-//                     double c4 = 0.0; // A'B'C
-//                     c4 += distance(a, c);
-//                     c4 += distance(b, e);
-//                     c4 += distance(d, f);
-                    
-
-//                     double c5 = 0.0; // A'BC'
-//                     c5 += distance(a, e);
-//                     c5 += distance(b, d);
-//                     c5 += distance(c, f);
-
-//                     double c6 = 0.0; // AB'C'
-//                     c6 += distance(a, d);
-//                     c6 += distance(b, f);
-//                     c6 += distance(c, e);
-
-//                     double c7 = 0.0; // A'B'C'
-//                     c7 += distance(a, d);
-//                     c7 += distance(b, e);
-//                     c7 += distance(c, f);
-
-//                     double mn = min({ c1, c2, c3, c4, c5, c6, c7 });
-//                     if (mn < originalLength) {
-//                         improvement = true;
-//                         if (c1 == mn) {
-//                             reverse(tour.begin() + i + 1, tour.begin() + j + 1);
-//                         }
-//                         if (c2 == mn) {
-//                             reverse(tour.begin() + j + 1, tour.begin() + k + 1);
-//                         }
-//                         if (c3 == mn) {
-//                             reverse(tour.begin() + i + 1, tour.begin() + k + 1); // change body, not segment. It is symmetric.
-//                         }
-//                         if (c4 == mn) {
-//                             reverse(tour.begin() + i + 1, tour.begin() + j + 1);
-//                             reverse(tour.begin() + j + 1, tour.begin() + k + 1);
-//                         }
-//                         if (c5 == mn) {
-//                             reverse(tour.begin() + i + 1, tour.begin() + j + 1);
-//                             reverse(tour.begin() + i + 1, tour.begin() + k + 1);
-//                         }
-//                         if (c6 == mn) {
-//                             reverse(tour.begin() + j + 1, tour.begin() + k + 1);
-//                             reverse(tour.begin() + i + 1, tour.begin() + k + 1);
-//                         }
-//                         if (c7 == mn) {
-//                             reverse(tour.begin() + i + 1, tour.begin() + j + 1);
-//                             reverse(tour.begin() + j + 1, tour.begin() + k + 1);
-//                             reverse(tour.begin() + i + 1, tour.begin() + k + 1);
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-
-//         // Break the loop if no improvement is made or time limit is exceeded
-//         if (!improvement) {
-//             break;
-//         }
-//     }
-
-//     return { tourLength(points, tour), tour };
-// }
 
 vector<double> cut(vector<double> bars) {
     int n = bars.size();
